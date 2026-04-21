@@ -79,7 +79,10 @@ export function readDbfHeader(dbf: Uint8Array): DbfHeader {
 
   const fields: DbfField[] = [];
   let offset = 32;
-  while (offset < headerLength && dbf[offset] !== TERMINATOR) {
+  // dBase III termina descritores com 0x0D; algumas variantes do DATASUS (CNES)
+  // usam padding 0x00 antes do final do header. Qualquer dos dois encerra
+  // a iteração — um "nome de campo" começando em 0x00 não existe.
+  while (offset < headerLength - 1 && dbf[offset] !== TERMINATOR && dbf[offset] !== 0x00) {
     if (offset + 32 > dbf.length) {
       throw new Error(`DBF header truncated reading field descriptors at offset ${offset}`);
     }
@@ -96,10 +99,6 @@ export function readDbfHeader(dbf: Uint8Array): DbfHeader {
 
     fields.push({ decimalCount, length, name, type });
     offset += 32;
-  }
-
-  if (dbf[offset] !== TERMINATOR) {
-    throw new Error(`DBF header missing 0x0D terminator at offset ${offset}`);
   }
 
   return { dateOfLastUpdate, fields, headerLength, recordCount, recordLength, version };
