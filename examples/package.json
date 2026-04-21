@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sih-admissions": "tsx sih-admissions-by-city.ts"
+    "cnes-establishments": "tsx cnes-establishments.ts"
   },
   "dependencies": {
     "@precisa-saude/datasus": "workspace:*"

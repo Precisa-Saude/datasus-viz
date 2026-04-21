@@ -1,17 +1,14 @@
 {
   "name": "@precisa-saude/datasus",
   "version": "0.1.0",
-  "description": "Toolkit alto-nível para microdados DATASUS — FTP cliente, schemas tipados, labeling (CID-10, IBGE, CBO, SIGTAP) e agregações",
+  "description": "Toolkit alto-nível para microdados DATASUS — FTP cliente, schemas tipados, labeling (IBGE, TP_UNID) e agregações",
   "keywords": [
     "datasus",
-    "sih",
-    "sinan",
     "cnes",
     "sus",
     "microdados",
     "brasil",
-    "saúde",
-    "cid-10"
+    "saúde"
   ],
   "homepage": "https://github.com/Precisa-Saude/datasus-brasil/tree/main/packages/core#readme",
   "bugs": "https://github.com/Precisa-Saude/datasus-brasil/issues",

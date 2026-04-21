@@ -14,14 +14,7 @@ export * as labeling from './labeling/index.js';
 export { countBy, countByNested, topN } from './aggregations/index.js';
 export type { CnesEstabelecimentoRecord, CnesProfissionalRecord } from './datasets/cnes/index.js';
 export { labelTipoUnidade } from './datasets/cnes/index.js';
-export { cnes, sih, sinan } from './datasets/index.js';
-export type { SihRdRecord, SihSexo } from './datasets/sih/index.js';
-export type {
-  SinanAgravo,
-  SinanArboviroseRecord,
-  SinanClassificacao,
-} from './datasets/sinan/index.js';
-export { labelAgravo } from './datasets/sinan/index.js';
+export { cnes } from './datasets/index.js';
 export { download } from './ftp/index.js';
 export type { Municipio } from './labeling/index.js';
 export { allMunicipios, findMunicipio } from './labeling/index.js';
