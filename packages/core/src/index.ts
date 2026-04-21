@@ -1,11 +1,20 @@
 /**
  * @precisa-saude/datasus — façade alto-nível para microdados DATASUS.
  *
- * Cliente FTP com cache, schemas tipados por vintage, tabelas de labeling
- * (CID-10, IBGE municípios, CBO, SIGTAP) e agregações comuns para consumo
- * por apps web e CLIs. Saída padrão em JSON.
- *
- * Implementação a partir de M2 (PRE-198).
+ * Compõe FTP + decoder DBC + schemas tipados + labeling + agregações
+ * em uma API consumível por web apps e CLIs. Saída JSON-first.
  */
+
+export * as aggregations from './aggregations/index.js';
+export * as datasets from './datasets/index.js';
+export * as ftp from './ftp/index.js';
+export * as labeling from './labeling/index.js';
+
+// Re-exports planos para os consumidores que preferem API achatada
+export { countBy, countByNested, topN } from './aggregations/index.js';
+export { sih } from './datasets/index.js';
+export { download } from './ftp/index.js';
+export type { Municipio } from './labeling/index.js';
+export { allMunicipios, findMunicipio } from './labeling/index.js';
 
 export const VERSION = '0.1.0';

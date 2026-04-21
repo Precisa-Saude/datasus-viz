@@ -50,7 +50,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@precisa-saude/datasus-dbc": "workspace:*"
+    "@precisa-saude/datasus-dbc": "workspace:*",
+    "basic-ftp": "^5.3.0"
   },
   "devDependencies": {
     "tsup": "^8.3.5",
