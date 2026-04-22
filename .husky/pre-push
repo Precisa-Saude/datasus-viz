@@ -1,17 +1,21 @@
-#!/usr/bin/env sh
-
-# Pre-push: rodar checks completos antes de pushar para evitar quebrar CI.
-# Para pular em emergência (use com critério): `git push --no-verify`.
+# Full-checks hook. Runs the same gates as CI so a failing push is caught locally.
+# Per-repo coverage thresholds live in vitest config, not here.
 
 set -e
 
-echo "→ Verificando lockfile..."
-pnpm install --frozen-lockfile
+echo "→ verifying lockfile is in sync"
+pnpm install --frozen-lockfile --prefer-offline
 
-echo "→ Format check..."
+echo "→ prettier"
 pnpm format:check
 
-echo "→ Lint, typecheck e testes..."
-pnpm turbo run lint typecheck test
+echo "→ eslint"
+pnpm -r lint
 
-echo "✓ Pre-push OK"
+echo "→ typescript"
+pnpm -r typecheck
+
+echo "→ tests"
+pnpm -r test
+
+echo "✓ pre-push checks passed"
