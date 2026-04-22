@@ -41,6 +41,10 @@ export interface DownloadOptions {
   forceRefresh?: boolean;
   /** Host FTP. Default: `ftp.datasus.gov.br`. */
   host?: string;
+  /** Caminho absoluto no servidor FTP (ex: `/dissemin/publicos/CNES/...`). */
+  path: string;
+  /** Modo seguro (FTPS). DATASUS usa FTP plano — default false. */
+  secure?: boolean;
   /**
    * Callback chamado com eventos de progresso. Invocado pelo menos uma vez:
    * - cache hit: um único evento com `fromCache: true` e `transferred == total`.
@@ -48,10 +52,6 @@ export interface DownloadOptions {
    *   ~500ms) e um final com `transferred == total`.
    */
   onProgress?: (event: ProgressEvent) => void;
-  /** Caminho absoluto no servidor FTP (ex: `/dissemin/publicos/CNES/...`). */
-  path: string;
-  /** Modo seguro (FTPS). DATASUS usa FTP plano — default false. */
-  secure?: boolean;
 }
 
 /**
