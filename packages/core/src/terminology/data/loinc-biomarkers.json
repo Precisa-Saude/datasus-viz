@@ -1,15 +1,4 @@
 {
-  "_source": {
-    "competence": "2017-04",
-    "extracted_at": "2026-04-21T20:53:59.112Z",
-    "extractor": "packages/core/scripts/extract-ans-xlsx.ts",
-    "file": "MAPEAMENTO TUSS x SIGTAP 2017 04.xlsx",
-    "landing_page": "https://www.gov.br/ans/pt-br/assuntos/prestadores/padrao-para-troca-de-informacao-de-saude-suplementar-2013-tiss/padrao-tiss-tabelas-relacionadas",
-    "license": "Dado aberto — Lei de Acesso à Informação (Lei 12.527/2011)",
-    "notice": "Trabalho conjunto ANS (Agência Nacional de Saúde Suplementar) + COPISS + Ministério da Saúde, conduzido de 2015 a 2017 (baseado em ISO/TR 12300:2014). A versão em uso é a competência 2017-04.",
-    "publisher": "Agência Nacional de Saúde Suplementar (ANS)",
-    "url": "https://www.gov.br/ans/pt-br/arquivos/assuntos/prestadores/padrao-para-troca-de-informacao-de-saude-suplementar-tiss/padrao-tiss-tabelas-relacionadas/padraotiss_mapeamento_tuss_sigtap.zip"
-  },
   "mapping": [
     {
       "biomarker_code": "HDL",

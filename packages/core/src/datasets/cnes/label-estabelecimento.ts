@@ -48,7 +48,8 @@ export interface LabeledEstabelecimento {
   atividadeEnsino: CodigoRotulo;
   clientela: CodigoRotulo;
   // ----- Identificação -----
-  cnes: null | string;
+  /** CNES do estabelecimento (7 dígitos). Obrigatório; a função falha se ausente. */
+  cnes: string;
   cnpj: null | string;
   /** Competência no formato ISO (`"YYYY-MM"`); `null` se ausente ou inválida. */
   competencia: null | string;
@@ -101,8 +102,19 @@ function codigoRotulo(code: unknown, labeler: (c: string) => null | string): Cod
  * Converte um registro CNES-ST cru num objeto labeled. O input genérico
  * (`CnesEstabelecimentoRecord`) é aceito pra permitir fixtures tipadas;
  * na prática a função lê só os campos documentados abaixo.
+ *
+ * Validação: o registro precisa ter pelo menos `CNES` preenchido. Passar
+ * um registro de outro subdataset (ex: CNES-PF) produziria um objeto
+ * todo com nulls — a exceção aqui falha rápido pra evitar dados
+ * silenciosamente vazios.
  */
 export function labelEstabelecimento(record: CnesEstabelecimentoRecord): LabeledEstabelecimento {
+  const cnes = strOrNull(record['CNES']);
+  if (cnes === null) {
+    throw new Error(
+      'labelEstabelecimento: campo CNES ausente — o registro parece não ser um CNES-ST válido',
+    );
+  }
   const codMun = strOrNull(record['CODUFMUN']);
   const mun = codMun === null ? null : findMunicipio(codMun);
 
@@ -110,7 +122,7 @@ export function labelEstabelecimento(record: CnesEstabelecimentoRecord): Labeled
     atendimentos: labelFlagsGerais(record),
     atividadeEnsino: codigoRotulo(record['ATIVIDAD'], labelAtividadeEnsino),
     clientela: codigoRotulo(record['CLIENTEL'], labelClientela),
-    cnes: strOrNull(record['CNES']),
+    cnes,
     cnpj: strOrNull(record['CNPJ_MAN']),
     competencia: formatarCompetencia(strOrNull(record['COMPETEN'])),
     esferaAdministrativa: codigoRotulo(record['ESFERA_A'], labelEsferaAdmin),

@@ -256,7 +256,10 @@ async function main(): Promise<void> {
   const slim = results.map(({ candidates_shown: _c, error: _e, ...rest }) => rest);
   await writeFile(
     SLIM_OUT_JSON,
-    `${JSON.stringify({ _source: envelope._source, mapping: slim, model: MODEL }, null, 2)}\n`,
+    // Slim file não inclui `_source` (com `extracted_at` timestamp) pra
+    // evitar churn no checksum do pacote quando a extração é refeita —
+    // procedência completa fica no audit file em OUT_JSON.
+    `${JSON.stringify({ mapping: slim, model: MODEL }, null, 2)}\n`,
   );
   await writeFile(OUT_REPORT, renderReport(results, envelope._source));
 

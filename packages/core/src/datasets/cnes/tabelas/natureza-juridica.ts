@@ -66,7 +66,6 @@ const LABELS: Record<string, string> = {
   // Entidades sem fins lucrativos
   '3034': 'Serviço Notarial e Registral (Cartório)',
   '3069': 'Fundação Privada',
-  '3069.1': 'Fundação Privada — Filantrópica',
   '3077': 'Serviço Social Autônomo',
   '3085': 'Condomínio Edilício',
   '3107': 'Comissão de Conciliação Prévia',

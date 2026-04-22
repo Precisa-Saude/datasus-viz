@@ -124,8 +124,27 @@ describe('labelEstabelecimento — registros sintéticos', () => {
     expect(labeled.matrizAtividadeConvenio).toEqual([]);
   });
 
+  it('falha rápido quando CNES está ausente', () => {
+    expect(() => labelEstabelecimento({} as unknown as CnesEstabelecimentoRecord)).toThrow(
+      /CNES ausente/,
+    );
+  });
+
+  it('preserva codigo cru quando slot QTINST não tem label conhecido', () => {
+    const raw = {
+      CNES: '1',
+      QTINST25: 2,
+      QTINST98: 1, // slot hipotético sem label
+    } as unknown as CnesEstabelecimentoRecord;
+    const labeled = labelEstabelecimento(raw);
+    const codigos = labeled.instalacoes.map((i) => ({ codigo: i.codigo, rotulo: i.rotulo }));
+    expect(codigos).toContainEqual({ codigo: 'QTINST25', rotulo: null });
+    expect(codigos).toContainEqual({ codigo: 'QTINST98', rotulo: null });
+  });
+
   it('soma leitos corretamente quando há múltiplas especialidades', () => {
     const raw = {
+      CNES: '1111111',
       LEITHOSP: '8',
       QTLEIT05: 3, // Cirúrgicos
       QTLEIT06: 5, // Clínicos
@@ -138,11 +157,13 @@ describe('labelEstabelecimento — registros sintéticos', () => {
 
   it('converte competência "202401" em "2024-01" e rejeita formatos inválidos', () => {
     const valido = labelEstabelecimento({
+      CNES: '1',
       COMPETEN: '202401',
     } as unknown as CnesEstabelecimentoRecord);
     expect(valido.competencia).toBe('2024-01');
 
     const invalido = labelEstabelecimento({
+      CNES: '1',
       COMPETEN: '2024',
     } as unknown as CnesEstabelecimentoRecord);
     expect(invalido.competencia).toBeNull();

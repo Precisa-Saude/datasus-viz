@@ -1,7 +1,12 @@
 /**
  * Tabela QTINST01..QTINST37 — quantidades de instalações físicas.
  *
- * Cada coluna conta salas/ambientes de um tipo específico.
+ * Cada coluna conta salas/ambientes de um tipo específico. Os rótulos
+ * aqui cobrem os slots cujo significado está documentado no dicionário
+ * CNES; slots cuja semântica ainda é incerta ficam fora da tabela e o
+ * `codigo` aparece cru no output labeled (o consumidor resolve pela
+ * vintage específica do dado que está processando).
+ *
  * Fonte: dicionário CNES DATASUS (tabela `TP_INST`).
  */
 
@@ -30,8 +35,6 @@ export const INSTALACOES_LABELS: Record<string, string> = {
   QTINST22: 'Salas de inalação',
   QTINST23: 'Salas de imunização',
   QTINST24: 'Salas de coleta/recepção de exames',
-  QTINST25: 'Salas de reidratação',
-  QTINST26: 'Salas de imunização (vacinação)',
   QTINST27: 'Consultórios de enfermagem',
   QTINST28: 'Consultórios de nutrição',
   QTINST29: 'Salas de curativo',
@@ -57,15 +60,19 @@ export interface InstalacaoContagem {
 /**
  * Extrai todas as instalações com `quantidade > 0` a partir do registro
  * CNES-ST, retornando com rótulo pt-BR. Campos ausentes ou zero são
- * omitidos pra manter o output enxuto.
+ * omitidos pra manter o output enxuto; slots cuja semântica não está em
+ * `INSTALACOES_LABELS` (ex: QTINST25, QTINST26) aparecem com
+ * `rotulo: null` pra que o consumidor consiga resolver pela vintage
+ * específica do dado sem silenciar dados.
  */
 export function labelInstalacoes(record: Record<string, unknown>): readonly InstalacaoContagem[] {
   const out: InstalacaoContagem[] = [];
-  for (const [codigo, rotulo] of Object.entries(INSTALACOES_LABELS)) {
-    const raw = record[codigo];
+  for (const key of Object.keys(record)) {
+    if (!/^QTINST\d+$/.test(key)) continue;
+    const raw = record[key];
     const quantidade = typeof raw === 'number' ? raw : Number(raw);
     if (!Number.isFinite(quantidade) || quantidade <= 0) continue;
-    out.push({ codigo, quantidade, rotulo });
+    out.push({ codigo: key, quantidade, rotulo: INSTALACOES_LABELS[key] ?? null });
   }
   return out;
 }
