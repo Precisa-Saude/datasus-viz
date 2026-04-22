@@ -1,5 +1,8 @@
 name: CI/CD
 
+# Orchestrator — wires reusable workflows. See
+# tooling/templates/github/workflows/ci.yml for the canonical shape.
+
 on:
   push:
     branches: [main]
@@ -8,49 +11,46 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   issues: write
   pull-requests: write
+  deployments: write
+  id-token: write
+  # `models: read` é necessário porque review.yml (reusable) pode chamar
+  # GitHub Models via GITHUB_TOKEN no fallback. Workflows reusáveis só
+  # conseguem pedir permissões que o caller também concede.
+  models: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
+  checks:
+    uses: ./.github/workflows/_checks.yml
+    secrets: inherit
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm turbo run build
-
-      - name: Lint
-        run: pnpm turbo run lint
-
-      - name: Typecheck
-        run: pnpm turbo run typecheck
-
-      - name: Test
-        run: pnpm turbo run test
-
-  # ── PR only: Claude code review ────────────────────────────
   review:
-    name: Code Review
-    needs: build-and-test
+    needs: checks
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/review.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  release:
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: ./.github/workflows/_release.yml
+    secrets: inherit
+
+  publish:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    uses: ./.github/workflows/_publish.yml
+    with:
+      release_sha: ${{ needs.release.outputs.release_sha }}
+      packages: |
+        packages/dbc
+        packages/core
     secrets: inherit
