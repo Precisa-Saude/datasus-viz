@@ -1,6 +1,6 @@
 export default function Sobre() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 font-serif leading-relaxed">
+    <div className="mx-auto max-w-3xl px-4 pt-24 pb-10 font-serif leading-relaxed">
       <h1 className="font-sans text-3xl font-bold tracking-tight">Sobre</h1>
 
       <section className="mt-8 space-y-4">

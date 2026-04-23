@@ -232,6 +232,16 @@ export function BrasilMap(props: BrasilMapProps) {
           });
         }
 
+        // Re-habilita visibilidade do layer municipal caso tenha sido
+        // escondido por uma volta anterior (setData só atualiza dados,
+        // não volta o `visibility` sozinho).
+        if (map.getLayer('municipios-fill')) {
+          map.setLayoutProperty('municipios-fill', 'visibility', 'visible');
+        }
+        if (map.getLayer('municipios-outline')) {
+          map.setLayoutProperty('municipios-outline', 'visibility', 'visible');
+        }
+
         // Mantém o contorno do Brasil visível como referência, mas
         // dessatura o preenchimento pra não competir com o municipal.
         if (map.getLayer('uf-fill')) map.setPaintProperty('uf-fill', 'fill-opacity', 0.15);
