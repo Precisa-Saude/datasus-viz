@@ -34,7 +34,9 @@ import duckdb from 'duckdb';
 
 interface Cli {
   outDir: string;
+  throttleMs: number;
   ufs: string[];
+  yearPauseMs: number;
   years: number[];
 }
 
@@ -91,7 +93,19 @@ function parseArgs(argv: string[]): Cli {
   }
   const siteRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
   const outDir = resolve(siteRoot, get('--out', 'build/parquet'));
-  return { outDir, ufs, years };
+  const throttleMs = Number(get('--throttle-ms', '500'));
+  const yearPauseMs = Number(get('--year-pause-ms', '5000'));
+  if (!Number.isFinite(throttleMs) || throttleMs < 0) {
+    throw new Error(`--throttle-ms inválido: ${throttleMs}`);
+  }
+  if (!Number.isFinite(yearPauseMs) || yearPauseMs < 0) {
+    throw new Error(`--year-pause-ms inválido: ${yearPauseMs}`);
+  }
+  return { outDir, throttleMs, ufs, yearPauseMs, years };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((res) => setTimeout(res, ms));
 }
 
 interface Row {
@@ -191,7 +205,8 @@ async function main(): Promise<void> {
     `Agregando SIA-PA → Parquet | UFs=${cli.ufs.join(',')} | anos=${cli.years.join(',')} | out=${cli.outDir}\n`,
   );
 
-  for (const year of cli.years) {
+  for (let yIdx = 0; yIdx < cli.years.length; yIdx += 1) {
+    const year = cli.years[yIdx]!;
     for (const ufSigla of cli.ufs) {
       const rows: Row[] = [];
       let totalRead = 0;
@@ -200,11 +215,21 @@ async function main(): Promise<void> {
         const read = await collectMonth(ufSigla, year, month, rows);
         totalRead += read;
         process.stderr.write(`${month}${read > 0 ? '·' : 'x'}`);
+        // Throttle entre arquivos pra não hammer o FTP DATASUS.
+        if (cli.throttleMs > 0 && month < 12) await sleep(cli.throttleMs);
       }
       process.stderr.write(
         ` (${totalRead.toLocaleString('pt-BR')} registros → ${rows.length} lab-LOINC)\n`,
       );
       await writePartition(cli, ufSigla, year, rows);
+      if (cli.throttleMs > 0) await sleep(cli.throttleMs);
+    }
+    // Pausa mais longa entre anos (ex. checkpoint natural). Útil se
+    // quiser interromper manualmente — já temos todos os Parquet do
+    // ano completo em disco.
+    if (cli.yearPauseMs > 0 && yIdx < cli.years.length - 1) {
+      process.stderr.write(`  (pausa de ${cli.yearPauseMs}ms antes do próximo ano)\n`);
+      await sleep(cli.yearPauseMs);
     }
   }
 
