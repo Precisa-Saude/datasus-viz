@@ -5,9 +5,12 @@
  * CORS permissivo. Em dev local, setar `VITE_DATA_BASE_URL=/data-local`
  * pra apontar pra `public/data-local/` durante iteração sem rede.
  */
+// CloudFront distribution (dfdu08vi8wsus) serve do bucket S3
+// `precisa-saude-datasus-brasil` via Origin Access Control. CDN
+// absorve cache hits e corta custo/latência de Range Requests
+// repetidos.
 export const DATA_BASE_URL =
-  import.meta.env.VITE_DATA_BASE_URL ??
-  'https://precisa-saude-datasus-brasil.s3.sa-east-1.amazonaws.com';
+  import.meta.env.VITE_DATA_BASE_URL ?? 'https://dfdu08vi8wsus.cloudfront.net';
 
 export const PMTILES_URL = `${DATA_BASE_URL}/geo/brasil.pmtiles`;
 export const MANIFEST_URL = `${DATA_BASE_URL}/manifest/index.json`;
