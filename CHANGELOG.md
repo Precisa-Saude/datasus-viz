@@ -1,3 +1,13 @@
+## [1.1.0](https://github.com/Precisa-Saude/datasus-brasil/compare/v1.0.0...v1.1.0) (2026-04-23)
+
+### Features
+
+* SIA-SUS (PA) — dataset, bridge SIGTAP→LOINC e CLI ([#9](https://github.com/Precisa-Saude/datasus-brasil/issues/9)) ([4fb88e9](https://github.com/Precisa-Saude/datasus-brasil/commit/4fb88e95b84b1aa75bf20e56e51e85ca94997b13))
+
+### Chores
+
+* **deps:** bump @precisa-saude/* para ^1.5.0 ([#8](https://github.com/Precisa-Saude/datasus-brasil/issues/8)) ([1543d6e](https://github.com/Precisa-Saude/datasus-brasil/commit/1543d6e3cc1af689352eef6c90f40b2af3488c44))
+
 ## 1.0.0 (2026-04-22)
 
 ### Features
