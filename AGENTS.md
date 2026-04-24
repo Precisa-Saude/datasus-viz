@@ -23,7 +23,7 @@ separados — ver README.
 ```
 packages/
   cli/     → @precisa-saude/datasus-cli   (CLI `datasus-brasil`, consome datasus-sdk via npm)
-  site/    → @datasus-viz/site            (Vite + React + MapLibre + DuckDB WASM)
+site/      → @datasus-viz/site            (Vite + React + MapLibre + DuckDB WASM)
 ```
 
 Decoder e SDK extraídos para:
@@ -45,12 +45,12 @@ variante local deve ser preservada em `precisa sync`:
   server-side) usa o default sem DOM.
 - **`.prettierignore`** — ignora `**/*.geojson` (GeoJSON vem minificado
   de IBGE/geobr; reformatar explodiria o arquivo) e
-  `packages/site/public/data/**` (dados pré-agregados gerados pelo
-  pipeline do datasus-parquet).
+  `site/public/data/**` (dados pré-agregados gerados pelo pipeline do
+  datasus-parquet).
 - **`eslint.config.js`** — amplia o padrão de arquivos de teste para
   incluir `.tsx` e `**/__tests__/**`; mantém override para
-  `scripts/**/*.ts` e `packages/*/scripts/**/*.ts` (build/manutenção
-  fora do tsconfig dos packages, precisa console).
+  `scripts/**/*.ts` e `site/scripts/**/*.ts` (build/manutenção fora do
+  tsconfig dos packages, precisa console).
 - **`CITATION.cff`** — lista completa de keywords e referência aos
   agregados em datasus-parquet; template é um stub genérico.
 - **`SECURITY.md`** — detalha escopo específico do viz (XSS em

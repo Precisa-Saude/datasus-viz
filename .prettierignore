@@ -9,4 +9,4 @@ CHANGELOG.md
 # explodiria o arquivo em milhões de linhas de coordenadas.
 **/*.geojson
 # Dados pré-agregados gerados pelo `aggregate-sia.ts`.
-packages/site/public/data/**
+site/public/data/**

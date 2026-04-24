@@ -20,7 +20,7 @@ Do repo _root_; workspaces resolvem `@datasus-viz/site` automaticamente.
 
 ## Variáveis de ambiente
 
-Criar `packages/site/.env.local`:
+Criar `site/.env.local`:
 
 ```ini
 # Recomendado — sem o token, o mapa cai em modo texto (fail graceful)
@@ -36,7 +36,7 @@ _Token_ Mapbox gratuito: [`account.mapbox.com`](https://account.mapbox.com/).
 ### Dev _offline_ / sem CloudFront
 
 Para iterar sem depender de rede, copiar `build/parquet-opt`,
-`build/geo` e `build/manifest` para `packages/site/public/data-local/`
+`build/geo` e `build/manifest` para `site/public/data-local/`
 e apontar:
 
 ```ini
@@ -113,7 +113,7 @@ sleep 5 && curl -sI http://localhost:4332 | head -1
 ## _Layout_ do pacote
 
 ```
-packages/site/
+site/
 ├── docs/                   ← esta documentação
 ├── public/                 ← estáticos servidos em /
 ├── scripts/                ← pipeline de dados (Node/Bash)

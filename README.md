@@ -17,7 +17,7 @@ Precisa Saúde. Para cada responsabilidade existe um repo dedicado:
 
 ## Escopo deste repo
 
-- **`packages/site`** — site Vite/React + MapLibre GL JS + DuckDB WASM com
+- **`site`** — site Vite/React + MapLibre GL JS + DuckDB WASM com
   choropleth de biomarcadores laboratoriais por competência, com drill-down
   UF → município. Consome `parquet-opt/` derivado do arquivo público.
 - **`packages/cli`** — CLI `datasus-brasil` (nome histórico preservado para
@@ -49,7 +49,7 @@ pnpm install
 pnpm -F @datasus-viz/site dev
 ```
 
-Veja [`packages/site/docs/`](packages/site/docs/) para arquitetura,
+Veja [`site/docs/`](site/docs/) para arquitetura,
 pipeline de dados e deployment.
 
 ## Uso rápido da CLI
@@ -89,4 +89,4 @@ Apache-2.0 (código). Ver [LICENSE](LICENSE).
 Dados agregados publicados (quando aplicável) seguem CC-BY 4.0, derivados
 dos microdados DATASUS sob regime de dados abertos (Lei 12.527/2011 +
 Decreto 8.777/2016). Detalhes em
-[`packages/site/docs/data-license.md`](packages/site/docs/data-license.md).
+[`site/docs/data-license.md`](site/docs/data-license.md).

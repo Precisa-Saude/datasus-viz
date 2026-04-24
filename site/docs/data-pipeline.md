@@ -1,6 +1,6 @@
 # Pipeline de dados
 
-Documenta cada _script_ em `packages/site/scripts/` — objetivo,
+Documenta cada _script_ em `site/scripts/` — objetivo,
 argumentos, entrada, saída, e _schema_ dos artefatos gerados.
 
 Fluxo completo:
