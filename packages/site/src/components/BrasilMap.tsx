@@ -1,15 +1,25 @@
-import 'mapbox-gl/dist/mapbox-gl.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
-import mapboxgl from 'mapbox-gl';
+import maplibregl from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
 import type { MunicipioAggregate, UfAggregate } from '@/lib/aggregates';
-import { PMTILES_URL } from '@/lib/data-source';
-import { BRAZIL_BOUNDS, BRAZIL_FIT_PADDING, getMapboxToken } from '@/lib/mapbox';
+import {
+  addMapLayers,
+  MUN_FILL,
+  MUN_LAYER,
+  pushMunicipioState,
+  pushUfState,
+  SOURCE_ID,
+  toggleDrilldown,
+  UF_FILL,
+  UF_LAYER,
+} from '@/lib/map-layers';
+import { BASEMAP_STYLE, BRAZIL_BOUNDS, BRAZIL_FIT_PADDING, BRAZIL_MAX_BOUNDS } from '@/lib/mapbox';
 import { ensurePmtilesProtocol } from '@/lib/pmtiles-protocol';
 import { buildOverviewTooltipHtml } from '@/lib/tooltip';
 
-import { MapboxTokenMissing, MapLegend } from './MapLegend';
+import { MapLegend } from './MapLegend';
 
 export interface SelectedMunicipio {
   codigo: string;
@@ -19,123 +29,34 @@ export interface SelectedMunicipio {
 
 export interface BrasilMapProps {
   availableUFs: readonly string[];
-  biomarkerDisplay: string;
-  biomarkersByLoinc: Record<string, string>;
   competencia: string;
-  loinc: string;
+  /** Quando setado, pede que o mapa centralize/zoom no município (codarea). */
+  focusMunCodigo: null | string;
   /** Agregado municipal da UF ativa no drill-down (ou null). */
   municipioData: MunicipioAggregate[] | null;
+  /** Contador que, ao mudar, pede fit aos bounds da UF atual. */
+  refitUfSignal: number;
   selectedUf: null | string;
   /** Agregado nacional. */
   ufData: UfAggregate[];
   onMunicipioClick: (m: SelectedMunicipio) => void;
   onUfClick: (ufSigla: string) => void;
+  /** Disparado quando o usuário dá zoom out o suficiente no drill-down. */
+  onZoomOutReset: () => void;
 }
 
 interface LayerRefs {
   latestProps: React.MutableRefObject<BrasilMapProps | null>;
-  popup: React.MutableRefObject<mapboxgl.Popup | null>;
+  popup: React.MutableRefObject<maplibregl.Popup | null>;
 }
 
-const SOURCE_ID = 'brasil';
-// Layers vindos do tippecanoe (ver scripts/build-geo-tiles.sh).
-const UF_LAYER = 'ufs';
-const MUN_LAYER = 'municipios';
-
-const VIOLET_RAMP = [
-  'interpolate',
-  ['linear'],
-  ['coalesce', ['feature-state', 'normalizado'], 0],
-  0,
-  '#f3f0ff',
-  0.25,
-  '#c7b8ff',
-  0.5,
-  '#7856d2',
-  0.75,
-  '#463c6d',
-  1,
-  '#2a2241',
-];
-
-function pushUfState(
-  map: mapboxgl.Map,
-  ufData: readonly UfAggregate[],
-  loinc: string,
-  competencia: string,
-): void {
-  const filtered = ufData.filter((r) => r.loinc === loinc && r.competencia === competencia);
-  const byUf = new Map(filtered.map((r) => [r.ufSigla, r]));
-  const max = Math.max(1, ...filtered.map((r) => r.volumeExames));
-
-  // Zera todas as UFs primeiro; depois escreve as que têm dados.
-  // `removeFeatureState` limpa tudo pra aquela source-layer.
-  map.removeFeatureState({ source: SOURCE_ID, sourceLayer: UF_LAYER });
-  for (const [sigla, agg] of byUf) {
-    map.setFeatureState(
-      { id: sigla, source: SOURCE_ID, sourceLayer: UF_LAYER },
-      {
-        normalizado: agg.volumeExames / max,
-        ufName: sigla,
-        valor: agg.valorAprovadoBRL,
-        volume: agg.volumeExames,
-      },
-    );
-  }
-}
-
-function pushMunicipioState(
-  map: mapboxgl.Map,
-  data: readonly MunicipioAggregate[],
-  loinc: string,
-  competencia: string,
-): void {
-  const filtered = data.filter((r) => r.loinc === loinc && r.competencia === competencia);
-  // IBGE `codarea` = 7 dígitos, mas o tippecanoe usou `codarea` como
-  // promoteId — a feature-id é o valor literal do GeoJSON.
-  const byMun = new Map(filtered.map((r) => [r.municipioCode.slice(0, 6), r]));
-  const max = Math.max(1, ...filtered.map((r) => r.volumeExames));
-
-  map.removeFeatureState({ source: SOURCE_ID, sourceLayer: MUN_LAYER });
-  // Varre as features vector atualmente carregadas — só dá pra setar
-  // state num ID que existe na tile. Uso `queryRenderedFeatures` na
-  // layer municipal pra pegar IDs visíveis; `setFeatureState` funciona
-  // mesmo em features ainda-não-renderizadas se o promoteId estiver
-  // configurado corretamente (Mapbox guarda em cache).
-  for (const [key6, agg] of byMun) {
-    // Tenta 7 dígitos (mais 0 comum no DV, nem sempre 0).
-    // Estratégia: pro match robusto, usamos a FeatureCollection gerada
-    // por tippecanoe, onde `codarea` retém 7 dígitos. Como não sabemos
-    // o DV exato, usamos o expression `starts-with` num filter — mas
-    // setFeatureState exige ID exato. Solução: buscar features via
-    // querySourceFeatures e matchar key6 com slice.
-    const matches = map.querySourceFeatures(SOURCE_ID, {
-      sourceLayer: MUN_LAYER,
-      validate: false,
-    });
-    for (const f of matches) {
-      const codarea = String(f.properties?.codarea ?? '');
-      if (codarea.slice(0, 6) !== key6) continue;
-      map.setFeatureState(
-        { id: codarea, source: SOURCE_ID, sourceLayer: MUN_LAYER },
-        {
-          municipio: agg.municipioNome,
-          normalizado: agg.volumeExames / max,
-          valor: agg.valorAprovadoBRL,
-          volume: agg.volumeExames,
-        },
-      );
-    }
-  }
-}
-
-function attachHandlers(map: mapboxgl.Map, refs: LayerRefs): void {
+function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
   const popup =
     refs.popup.current ??
-    new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+    new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
   refs.popup.current = popup;
 
-  map.on('mousemove', UF_LAYER, (e) => {
+  map.on('mousemove', UF_FILL, (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf !== null) return;
     const feature = e.features?.[0];
@@ -160,11 +81,11 @@ function attachHandlers(map: mapboxgl.Map, refs: LayerRefs): void {
       )
       .addTo(map);
   });
-  map.on('mouseleave', UF_LAYER, () => {
+  map.on('mouseleave', UF_FILL, () => {
     map.getCanvas().style.cursor = '';
     popup.remove();
   });
-  map.on('click', UF_LAYER, (e) => {
+  map.on('click', UF_FILL, (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf !== null) return;
     const feature = e.features?.[0];
@@ -173,20 +94,21 @@ function attachHandlers(map: mapboxgl.Map, refs: LayerRefs): void {
     latest.onUfClick(sigla);
   });
 
-  map.on('mousemove', MUN_LAYER, (e) => {
+  map.on('mousemove', MUN_FILL, (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf === null) return;
     const feature = e.features?.[0];
     if (!feature) return;
     const featureUf = String(feature.properties?.uf ?? '');
     if (featureUf !== latest.selectedUf) return;
-    const codarea = String(feature.properties?.codarea ?? feature.id ?? '');
+    const codareaStr = String(feature.properties?.codarea ?? feature.id ?? '');
+    const featId = feature.id ?? codareaStr;
     const state = map.getFeatureState({
-      id: codarea,
+      id: featId,
       source: SOURCE_ID,
       sourceLayer: MUN_LAYER,
     }) as { municipio?: string; volume?: number } | null;
-    const name = state?.municipio ?? String(feature.properties?.nome ?? `código ${codarea}`);
+    const name = state?.municipio ?? String(feature.properties?.nome ?? `código ${codareaStr}`);
     const hasData = Number(state?.volume ?? 0) > 0;
     map.getCanvas().style.cursor = hasData ? 'pointer' : 'default';
     popup
@@ -203,134 +125,72 @@ function attachHandlers(map: mapboxgl.Map, refs: LayerRefs): void {
       )
       .addTo(map);
   });
-  map.on('mouseleave', MUN_LAYER, () => {
+  map.on('mouseleave', MUN_FILL, () => {
     map.getCanvas().style.cursor = '';
     popup.remove();
   });
-  map.on('click', MUN_LAYER, (e) => {
+  map.on('click', MUN_FILL, (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf === null) return;
     const feature = e.features?.[0];
     if (!feature) return;
     const featureUf = String(feature.properties?.uf ?? '');
     if (featureUf !== latest.selectedUf) return;
-    const codarea = String(feature.properties?.codarea ?? feature.id ?? '');
+    const codareaStr = String(feature.properties?.codarea ?? feature.id ?? '');
+    const featId = feature.id ?? codareaStr;
     const state = map.getFeatureState({
-      id: codarea,
+      id: featId,
       source: SOURCE_ID,
       sourceLayer: MUN_LAYER,
     }) as { municipio?: string; volume?: number } | null;
     if (Number(state?.volume ?? 0) === 0) return;
+    map.easeTo({ center: e.lngLat, duration: 600, zoom: Math.max(map.getZoom(), 10) });
     latest.onMunicipioClick({
-      codigo: codarea,
-      nome: state?.municipio ?? String(feature.properties?.nome ?? codarea),
+      codigo: codareaStr,
+      nome: state?.municipio ?? String(feature.properties?.nome ?? codareaStr),
       ufSigla: featureUf,
     });
   });
-}
 
-function addLayers(map: mapboxgl.Map): void {
-  if (!map.getSource(SOURCE_ID)) {
-    map.addSource(SOURCE_ID, {
-      promoteId: { municipios: 'codarea', ufs: 'sigla' },
-      type: 'vector',
-      url: `pmtiles://${PMTILES_URL}`,
-    });
-  }
-  if (!map.getLayer('uf-fill')) {
-    map.addLayer({
-      id: 'uf-fill',
-      paint: {
-        'fill-color': VIOLET_RAMP as unknown as mapboxgl.ExpressionSpecification,
-        'fill-opacity': 0.75,
-      },
-      source: SOURCE_ID,
-      'source-layer': UF_LAYER,
-      type: 'fill',
-    });
-    map.addLayer({
-      id: 'uf-outline',
-      paint: { 'line-color': '#463c6d', 'line-width': 0.5 },
-      source: SOURCE_ID,
-      'source-layer': UF_LAYER,
-      type: 'line',
-    });
-  }
-  if (!map.getLayer('municipios-fill')) {
-    map.addLayer({
-      id: 'municipios-fill',
-      paint: {
-        'fill-color': VIOLET_RAMP as unknown as mapboxgl.ExpressionSpecification,
-        'fill-opacity': [
-          'case',
-          ['>', ['coalesce', ['feature-state', 'volume'], 0], 0],
-          0.75,
-          0,
-        ] as unknown as mapboxgl.ExpressionSpecification,
-      },
-      source: SOURCE_ID,
-      'source-layer': MUN_LAYER,
-      type: 'fill',
-    });
-    map.addLayer({
-      id: 'municipios-outline',
-      layout: { visibility: 'none' },
-      paint: { 'line-color': '#463c6d', 'line-width': 0.4 },
-      source: SOURCE_ID,
-      'source-layer': MUN_LAYER,
-      type: 'line',
-    });
-  }
-}
-
-function toggleDrilldown(map: mapboxgl.Map, uf: null | string): void {
-  if (uf) {
-    if (map.getLayer('municipios-fill')) {
-      map.setLayoutProperty('municipios-fill', 'visibility', 'visible');
-      map.setFilter('municipios-fill', ['==', ['get', 'uf'], uf]);
-    }
-    if (map.getLayer('municipios-outline')) {
-      map.setLayoutProperty('municipios-outline', 'visibility', 'visible');
-      map.setFilter('municipios-outline', ['==', ['get', 'uf'], uf]);
-    }
-    if (map.getLayer('uf-fill')) map.setPaintProperty('uf-fill', 'fill-opacity', 0.15);
-  } else {
-    if (map.getLayer('municipios-fill')) {
-      map.setLayoutProperty('municipios-fill', 'visibility', 'none');
-    }
-    if (map.getLayer('municipios-outline')) {
-      map.setLayoutProperty('municipios-outline', 'visibility', 'none');
-    }
-    if (map.getLayer('uf-fill')) map.setPaintProperty('uf-fill', 'fill-opacity', 0.75);
-  }
+  // Reset automático: zoom out no drill-down volta pra visão Brasil.
+  map.on('zoomend', () => {
+    const latest = refs.latestProps.current;
+    if (!latest || latest.selectedUf === null) return;
+    if (map.getZoom() < 4.2) latest.onZoomOutReset();
+  });
 }
 
 export function BrasilMap(props: BrasilMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
   const loadedRef = useRef(false);
+  const ufBoundsRef = useRef<Map<string, maplibregl.LngLatBounds>>(new Map());
   const latestPropsRef = useRef<BrasilMapProps | null>(null);
   latestPropsRef.current = props;
-  const token = getMapboxToken();
 
-  // Inicializa Mapbox + PMTiles uma vez.
+  // Inicializa MapLibre + PMTiles uma vez.
   useEffect(() => {
-    if (!token || !containerRef.current) return;
+    if (!containerRef.current) return;
     ensurePmtilesProtocol();
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       bearing: 180,
       bounds: BRAZIL_BOUNDS,
       container: containerRef.current,
       fitBoundsOptions: { bearing: 180, padding: BRAZIL_FIT_PADDING },
-      projection: 'mercator',
-      style: 'mapbox://styles/mapbox/light-v11',
+      // Impede pan além do Brasil + evita artefatos de world-wrap
+      // horizontal (polígonos duplicados quando o mapa scrolla sobre
+      // o antimeridian em zoom baixo).
+      maxBounds: BRAZIL_MAX_BOUNDS,
+      maxZoom: 10,
+      minZoom: 3,
+      renderWorldCopies: false,
+      style: BASEMAP_STYLE,
     });
     mapRef.current = map;
     map.once('load', () => {
       loadedRef.current = true;
-      addLayers(map);
+      addMapLayers(map);
       attachHandlers(map, { latestProps: latestPropsRef, popup: popupRef });
     });
     return () => {
@@ -338,53 +198,78 @@ export function BrasilMap(props: BrasilMapProps) {
       mapRef.current = null;
       loadedRef.current = false;
     };
-  }, [token]);
+  }, []);
 
   // Atualiza feature-state da UF quando filtros mudam.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const apply = (): void => pushUfState(map, props.ufData, props.loinc, props.competencia);
+    const apply = (): void => pushUfState(map, props.ufData, props.competencia);
     if (loadedRef.current) apply();
     else map.once('load', apply);
-  }, [props.ufData, props.loinc, props.competencia]);
+  }, [props.ufData, props.competencia]);
 
-  // Atualiza feature-state do drill-down quando entra numa UF ou muda filtro.
+  // Transição de UF (entrar/sair do drill-down): toggle layers + fitBounds.
+  // Isolado de mudanças de competência/municipioData para preservar o zoom
+  // e posição atuais quando o usuário arrasta o slider.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const apply = (): void => {
-      toggleDrilldown(map, props.selectedUf);
-      if (props.selectedUf) {
-        // Anima para o UF selecionado; bounds aproximados via fitBounds
-        // do centróide dos municípios carregados quando o tile chegar.
-        const features = map.querySourceFeatures(SOURCE_ID, {
-          filter: ['==', ['get', 'sigla'], props.selectedUf],
-          sourceLayer: UF_LAYER,
-        });
-        if (features.length > 0) {
-          const bounds = new mapboxgl.LngLatBounds();
-          extractCoords(features[0]!.geometry).forEach((c) => bounds.extend(c));
-          if (!bounds.isEmpty()) {
-            map.fitBounds(bounds, { bearing: 180, duration: 1200, padding: 40 });
-          }
-        }
-        if (props.municipioData) {
-          pushMunicipioState(map, props.municipioData, props.loinc, props.competencia);
-        }
-      } else {
-        map.fitBounds(BRAZIL_BOUNDS, {
-          bearing: 180,
-          duration: 1200,
-          padding: BRAZIL_FIT_PADDING,
-        });
+      try {
+        toggleDrilldown(map, props.selectedUf);
+        if (props.selectedUf) fitToUf(map, props.selectedUf, ufBoundsRef.current);
+        else fitToBrazil(map);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[BrasilMap drill-down apply]', err);
       }
     };
     if (loadedRef.current) apply();
     else map.once('load', apply);
-  }, [props.selectedUf, props.municipioData, props.loinc, props.competencia]);
+  }, [props.selectedUf]);
 
-  if (!token) return <MapboxTokenMissing />;
+  // Refit pedido explicitamente (ex.: fechar painel de município).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !props.selectedUf) return;
+    if (loadedRef.current) fitToUf(map, props.selectedUf, ufBoundsRef.current);
+  }, [props.refitUfSignal, props.selectedUf]);
+
+  // Foco em município via código (ex.: clique na linha da tabela).
+  useEffect(() => {
+    const map = mapRef.current;
+    const codigo = props.focusMunCodigo;
+    if (!map || !codigo || !props.selectedUf) return;
+    const run = (): void => focusMunicipio(map, codigo);
+    if (loadedRef.current) run();
+    else map.once('load', run);
+  }, [props.focusMunCodigo, props.selectedUf]);
+
+  // Reaplica feature-state municipal quando o dado muda (competência ou
+  // município) sem mexer em zoom/centro.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !props.selectedUf || !props.municipioData) return;
+    const muni = props.municipioData;
+    const comp = props.competencia;
+    const tryApply = (): boolean => {
+      const f = map.querySourceFeatures(SOURCE_ID, { sourceLayer: MUN_LAYER });
+      if (f.length === 0) return false;
+      pushMunicipioState(map, muni, comp);
+      return true;
+    };
+    const run = (): void => {
+      if (!tryApply()) {
+        const retry = (): void => {
+          if (tryApply()) map.off('sourcedata', retry);
+        };
+        map.on('sourcedata', retry);
+      }
+    };
+    if (loadedRef.current) run();
+    else map.once('load', run);
+  }, [props.selectedUf, props.municipioData, props.competencia]);
 
   return (
     <div className="relative h-full w-full">
@@ -394,8 +279,86 @@ export function BrasilMap(props: BrasilMapProps) {
   );
 }
 
-function extractCoords(geom: GeoJSON.Geometry): Array<[number, number]> {
-  if (geom.type === 'Polygon') return geom.coordinates.flat() as Array<[number, number]>;
-  if (geom.type === 'MultiPolygon') return geom.coordinates.flat(2) as Array<[number, number]>;
+function fitToUf(
+  map: maplibregl.Map,
+  uf: string,
+  cache: Map<string, maplibregl.LngLatBounds>,
+): void {
+  // Se já temos bounds em cache (computados quando a UF inteira estava
+  // visível no tile zoom 3), usa — senão querySourceFeatures só retorna
+  // a fatia da UF nos tiles carregados e o fit vira em cima dessa fatia.
+  let bounds = cache.get(uf);
+  if (!bounds || bounds.isEmpty()) {
+    const features = map.querySourceFeatures(SOURCE_ID, {
+      filter: ['==', ['get', 'sigla'], uf],
+      sourceLayer: UF_LAYER,
+    });
+    const b = new maplibregl.LngLatBounds();
+    for (const f of features) {
+      try {
+        extractCoords(f.geometry).forEach((c) => b.extend(c));
+      } catch {
+        // Geometria inesperada — pula.
+      }
+    }
+    if (!b.isEmpty()) {
+      cache.set(uf, b);
+      bounds = b;
+    }
+  }
+  if (bounds && !bounds.isEmpty()) {
+    map.fitBounds(bounds, { bearing: 180, duration: 1200, padding: 40 });
+  }
+}
+
+function focusMunicipio(map: maplibregl.Map, codigo: string): void {
+  const key6 = codigo.slice(0, 6);
+  const features = map.querySourceFeatures(SOURCE_ID, { sourceLayer: MUN_LAYER });
+  const match = features.find((f) => String(f.properties?.codarea ?? '').slice(0, 6) === key6);
+  if (!match) return;
+  const bounds = new maplibregl.LngLatBounds();
+  extractCoords(match.geometry).forEach((c) => bounds.extend(c));
+  if (bounds.isEmpty()) return;
+  map.easeTo({
+    center: bounds.getCenter(),
+    duration: 600,
+    zoom: Math.max(map.getZoom(), 10),
+  });
+}
+
+function fitToBrazil(map: maplibregl.Map): void {
+  map.fitBounds(BRAZIL_BOUNDS, {
+    bearing: 180,
+    duration: 1200,
+    padding: BRAZIL_FIT_PADDING,
+  });
+}
+
+function extractCoords(geom: GeoJSON.Geometry | null | undefined): Array<[number, number]> {
+  if (!geom) return [];
+  if (geom.type === 'Polygon') {
+    const pts: Array<[number, number]> = [];
+    for (const ring of geom.coordinates) {
+      for (const p of ring) {
+        if (Array.isArray(p) && typeof p[0] === 'number' && typeof p[1] === 'number') {
+          pts.push([p[0], p[1]]);
+        }
+      }
+    }
+    return pts;
+  }
+  if (geom.type === 'MultiPolygon') {
+    const pts: Array<[number, number]> = [];
+    for (const poly of geom.coordinates) {
+      for (const ring of poly) {
+        for (const p of ring) {
+          if (Array.isArray(p) && typeof p[0] === 'number' && typeof p[1] === 'number') {
+            pts.push([p[0], p[1]]);
+          }
+        }
+      }
+    }
+    return pts;
+  }
   return [];
 }

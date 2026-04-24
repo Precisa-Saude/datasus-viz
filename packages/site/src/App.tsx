@@ -1,6 +1,7 @@
 import { GridOverlay } from '@precisa-saude/ui/decorative';
 import { Route, Routes } from 'react-router-dom';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Footer } from './components/Footer';
 import { Nav } from './components/Nav';
 import Home from './pages/Home';
@@ -12,10 +13,12 @@ export default function App() {
       <Nav />
       <GridOverlay enabled={import.meta.env.DEV} />
       <main className="flex flex-1 flex-col">
-        <Routes>
-          <Route element={<Home />} path="/" />
-          <Route element={<Sobre />} path="/sobre" />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route element={<Home />} path="/" />
+            <Route element={<Sobre />} path="/sobre" />
+          </Routes>
+        </ErrorBoundary>
       </main>
       <Footer />
     </div>

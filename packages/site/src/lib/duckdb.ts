@@ -1,17 +1,23 @@
 /**
- * DuckDB WASM singleton — bootstrap lazy, conexão única, queries via
- * `queryAll`. Usa bundler-side worker do próprio `@duckdb/duckdb-wasm`
- * pra evitar CORS gymnastics com CDN remoto.
+ * DuckDB WASM singleton — bundle local via Vite `?url` em vez do
+ * jsDelivr default. Evita CORS / Trusted-Types quirks em
+ * cross-origin Blob workers.
  *
  * O banco é em memória; as tabelas-base vivem em S3 como Parquet e
- * são acessadas via `read_parquet('https://.../*.parquet',
- * hive_partitioning=1)` direto dentro da query SQL. Pushdown de
- * filtro por partição (`WHERE ano=..., uf=...`) evita baixar a
- * massa inteira — só os Parquets relevantes viram HTTP Range
- * requests.
+ * são acessadas via `read_parquet('https://.../*.parquet')` direto
+ * dentro da query SQL.
  */
 
 import * as duckdb from '@duckdb/duckdb-wasm';
+import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
+import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
+import duckdb_eh_wasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
+import duckdb_mvp_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
+
+const BUNDLES: duckdb.DuckDBBundles = {
+  eh: { mainModule: duckdb_eh_wasm, mainWorker: eh_worker },
+  mvp: { mainModule: duckdb_mvp_wasm, mainWorker: mvp_worker },
+};
 
 let dbPromise: Promise<duckdb.AsyncDuckDB> | null = null;
 let connPromise: Promise<duckdb.AsyncDuckDBConnection> | null = null;
@@ -19,12 +25,8 @@ let connPromise: Promise<duckdb.AsyncDuckDBConnection> | null = null;
 async function getDb(): Promise<duckdb.AsyncDuckDB> {
   if (!dbPromise) {
     dbPromise = (async () => {
-      const bundles = duckdb.getJsDelivrBundles();
-      const bundle = await duckdb.selectBundle(bundles);
-      const workerBlob = new Blob([`importScripts("${bundle.mainWorker!}");`], {
-        type: 'application/javascript',
-      });
-      const worker = new Worker(URL.createObjectURL(workerBlob));
+      const bundle = await duckdb.selectBundle(BUNDLES);
+      const worker = new Worker(bundle.mainWorker!, { type: 'module' });
       const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
       const db = new duckdb.AsyncDuckDB(logger, worker);
       await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
@@ -39,8 +41,7 @@ async function getConn(): Promise<duckdb.AsyncDuckDBConnection> {
     connPromise = (async () => {
       const db = await getDb();
       const conn = await db.connect();
-      // Habilita httpfs pra ler Parquet direto de URLs remotas.
-      await conn.query(`INSTALL httpfs; LOAD httpfs;`);
+      // `httpfs` é nativo no bundle WASM atual — não precisa INSTALL/LOAD.
       return conn;
     })();
   }

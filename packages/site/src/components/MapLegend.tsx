@@ -20,30 +20,3 @@ export function MapLegend({ drilldown }: { drilldown: boolean }) {
     </div>
   );
 }
-
-export function MapboxTokenMissing() {
-  return (
-    <div className="border-border bg-muted/30 text-muted-foreground flex h-full min-h-[400px] items-center justify-center rounded-lg border p-8 text-center">
-      <div className="max-w-md space-y-3">
-        <h3 className="font-sans text-base font-semibold">Token do Mapbox não configurado</h3>
-        <p className="text-sm">
-          Defina <code className="font-mono text-xs">VITE_MAPBOX_TOKEN</code> num arquivo{' '}
-          <code className="font-mono text-xs">.env.local</code> dentro de{' '}
-          <code className="font-mono text-xs">packages/site/</code> para habilitar o mapa.
-        </p>
-        <p className="text-xs">
-          Tokens gratuitos disponíveis em{' '}
-          <a
-            className="underline"
-            href="https://account.mapbox.com/"
-            rel="noreferrer"
-            target="_blank"
-          >
-            account.mapbox.com
-          </a>
-          .
-        </p>
-      </div>
-    </div>
-  );
-}
