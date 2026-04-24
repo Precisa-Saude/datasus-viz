@@ -35,6 +35,28 @@ Decoder e SDK extraídos para:
 
 Valid scopes: `site`, `cli`, `docs`, `ci`, `deps`, `lint`, `config`.
 
+## Divergências justificadas do template
+
+Arquivos que o template compartilhado geraria diferente, mas cuja
+variante local deve ser preservada em `precisa sync`:
+
+- **`tsconfig.json`** — adiciona `"lib": ["ES2022", "DOM"]` porque o
+  site (Vite + React) precisa dos tipos DOM; o template (bibliotecas
+  server-side) usa o default sem DOM.
+- **`.prettierignore`** — ignora `**/*.geojson` (GeoJSON vem minificado
+  de IBGE/geobr; reformatar explodiria o arquivo) e
+  `packages/site/public/data/**` (dados pré-agregados gerados pelo
+  pipeline do datasus-parquet).
+- **`eslint.config.js`** — amplia o padrão de arquivos de teste para
+  incluir `.tsx` e `**/__tests__/**`; mantém override para
+  `scripts/**/*.ts` e `packages/*/scripts/**/*.ts` (build/manutenção
+  fora do tsconfig dos packages, precisa console).
+- **`CITATION.cff`** — lista completa de keywords e referência aos
+  agregados em datasus-parquet; template é um stub genérico.
+- **`SECURITY.md`** — detalha escopo específico do viz (XSS em
+  componentes que renderizam dados do usuário, DuckDB WASM,
+  vulnerabilidades em MapLibre); template tem seção genérica.
+
 ## Data output — JSON-first
 
 **CRITICAL**: user-visible output (examples, CLI, end-to-end checks,
