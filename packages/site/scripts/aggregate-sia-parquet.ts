@@ -170,8 +170,7 @@ async function collectMonth(
   ufSigla: string,
   year: number,
   month: number,
-  rows: Row[],
-): Promise<number> {
+): Promise<{ read: number; rows: Row[] }> {
   const iso = `${year}-${String(month).padStart(2, '0')}`;
   const agg = new Map<string, { valor: number; volume: number; nome: string }>();
   let read = 0;
@@ -201,8 +200,9 @@ async function collectMonth(
     }
   } catch (err) {
     process.stderr.write(`FALHA ${ufSigla} ${iso}: ${(err as Error).message}\n`);
-    return 0;
+    return { read: 0, rows: [] };
   }
+  const rows: Row[] = [];
   for (const [key, v] of agg) {
     const [municipioCode, loinc] = key.split('|') as [string, string];
     rows.push({
@@ -215,12 +215,19 @@ async function collectMonth(
       volumeExames: v.volume,
     });
   }
-  return read;
+  return { read, rows };
 }
 
-async function writePartition(cli: Cli, ufSigla: string, year: number, rows: Row[]): Promise<void> {
+async function writeMonthPartition(
+  cli: Cli,
+  ufSigla: string,
+  year: number,
+  month: number,
+  rows: Row[],
+): Promise<void> {
   if (rows.length === 0) return;
-  const partitionDir = resolve(cli.outDir, `ano=${year}/uf=${ufSigla}`);
+  const mesStr = String(month).padStart(2, '0');
+  const partitionDir = resolve(cli.outDir, `ano=${year}/uf=${ufSigla}/mes=${mesStr}`);
   mkdirSync(partitionDir, { recursive: true });
   const outFile = resolve(partitionDir, 'part.parquet');
 
@@ -248,41 +255,39 @@ async function writePartition(cli: Cli, ufSigla: string, year: number, rows: Row
   });
 
   rmSync(jsonFile);
-  process.stderr.write(`  ✓ ano=${year}/uf=${ufSigla}/part.parquet  (${rows.length} linhas)\n`);
+  process.stderr.write(
+    `  ✓ ano=${year}/uf=${ufSigla}/mes=${mesStr}/part.parquet  (${rows.length} linhas)\n`,
+  );
+}
+
+async function processMonth(
+  cli: Cli,
+  uf: string,
+  year: number,
+  month: number,
+): Promise<{ read: number; rowsEmitted: number; skipped?: boolean }> {
+  const mesStr = String(month).padStart(2, '0');
+  const outFile = resolve(cli.outDir, `ano=${year}/uf=${uf}/mes=${mesStr}/part.parquet`);
+  if (existsSync(outFile)) {
+    return { read: 0, rowsEmitted: 0, skipped: true };
+  }
+  const { read, rows } = await collectMonth(uf, year, month);
+  await writeMonthPartition(cli, uf, year, month, rows);
+  return { read, rowsEmitted: rows.length };
 }
 
 async function runFromPending(cli: Cli): Promise<void> {
   const pending = loadPending(cli.fromPending!);
   process.stderr.write(`Modo --from-pending: ${pending.length} (UF × competência) a processar\n`);
-
-  // Agrupa por (uf, year) pra emitir 1 partição por grupo — mantém o
-  // layout existente `ano=YYYY/uf=XX/part.parquet`.
-  const byUfYear = new Map<string, UfYearMonth[]>();
-  for (const p of pending) {
-    const key = `${p.uf}|${p.year}`;
-    const bucket = byUfYear.get(key) ?? [];
-    bucket.push(p);
-    byUfYear.set(key, bucket);
-  }
-
-  for (const [key, items] of [...byUfYear.entries()].sort()) {
-    const [uf, yearStr] = key.split('|') as [string, string];
-    const year = Number(yearStr);
-    const rows: Row[] = [];
-    let totalRead = 0;
-    process.stderr.write(`[${year}] ${uf}: `);
-    for (const { month } of items.sort((a, b) => a.month - b.month)) {
-      const read = await collectMonth(uf, year, month, rows);
-      totalRead += read;
-      process.stderr.write(`${month}${read > 0 ? '·' : 'x'}`);
-      if (cli.throttleMs > 0) await sleep(cli.throttleMs);
+  for (const { month, uf, year } of pending) {
+    const r = await processMonth(cli, uf, year, month);
+    if (cli.throttleMs > 0) await sleep(cli.throttleMs);
+    if (r.skipped) {
+      process.stderr.write(
+        `[${year}-${String(month).padStart(2, '0')}] ${uf}: já existe, pulando\n`,
+      );
     }
-    process.stderr.write(
-      ` (${totalRead.toLocaleString('pt-BR')} registros → ${rows.length} lab-LOINC)\n`,
-    );
-    await writePartition(cli, uf, year, rows);
   }
-
   process.stderr.write(`✓ Delta processado em ${cli.outDir}\n`);
 }
 
@@ -302,20 +307,20 @@ async function main(): Promise<void> {
   for (let yIdx = 0; yIdx < cli.years.length; yIdx += 1) {
     const year = cli.years[yIdx]!;
     for (const ufSigla of cli.ufs) {
-      const rows: Row[] = [];
-      let totalRead = 0;
       process.stderr.write(`[${year}] ${ufSigla}: `);
+      let totalRead = 0;
+      let totalRowsEmitted = 0;
       for (let month = 1; month <= 12; month += 1) {
-        const read = await collectMonth(ufSigla, year, month, rows);
-        totalRead += read;
-        process.stderr.write(`${month}${read > 0 ? '·' : 'x'}`);
+        const r = await processMonth(cli, ufSigla, year, month);
+        totalRead += r.read;
+        totalRowsEmitted += r.rowsEmitted;
+        process.stderr.write(`${month}${r.skipped ? '=' : r.read > 0 ? '·' : 'x'}`);
         // Throttle entre arquivos pra não hammer o FTP DATASUS.
         if (cli.throttleMs > 0 && month < 12) await sleep(cli.throttleMs);
       }
       process.stderr.write(
-        ` (${totalRead.toLocaleString('pt-BR')} registros → ${rows.length} lab-LOINC)\n`,
+        ` (${totalRead.toLocaleString('pt-BR')} registros → ${totalRowsEmitted} lab-LOINC)\n`,
       );
-      await writePartition(cli, ufSigla, year, rows);
       if (cli.throttleMs > 0) await sleep(cli.throttleMs);
     }
     // Pausa mais longa entre anos (ex. checkpoint natural). Útil se
