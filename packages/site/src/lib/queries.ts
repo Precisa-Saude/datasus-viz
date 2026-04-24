@@ -25,8 +25,15 @@ export interface MunicipioAggregateRow {
  * S3 por query, em vez de varrer todas as partições anuais.
  */
 export async function fetchUfAggregates(competencia: string): Promise<UfAggregateRow[]> {
+  // CAST para DOUBLE evita BigInt no cliente — int64 vira BigInt no
+  // DuckDB WASM por default, o que quebra `Math.max(...numbers)`.
   return queryAll<UfAggregateRow>(`
-    SELECT competencia, loinc, ufSigla, volumeExames, valorAprovadoBRL
+    SELECT
+      competencia,
+      loinc,
+      ufSigla,
+      CAST(volumeExames AS DOUBLE) AS volumeExames,
+      CAST(valorAprovadoBRL AS DOUBLE) AS valorAprovadoBRL
     FROM read_parquet('${UF_TOTALS_PARQUET}')
     WHERE competencia = '${competencia.replace(/'/g, "''")}'
   `);
@@ -50,8 +57,8 @@ export async function fetchMunicipioAggregates(
       municipioCode,
       municipioNome,
       '${safeUf}' AS ufSigla,
-      volumeExames,
-      valorAprovadoBRL
+      CAST(volumeExames AS DOUBLE) AS volumeExames,
+      CAST(valorAprovadoBRL AS DOUBLE) AS valorAprovadoBRL
     FROM read_parquet('${ufPartitionUrl(ufSigla)}')
     WHERE competencia = '${competencia.replace(/'/g, "''")}'
   `);
