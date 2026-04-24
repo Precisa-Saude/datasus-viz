@@ -67,7 +67,6 @@ function renderDetail(overrides: Partial<Parameters<typeof MunicipioDetail>[0]> 
       data={makeData()}
       municipio={MUNICIPIO}
       onClose={vi.fn()}
-      selectedLoinc="4548-4"
       {...overrides}
     />,
   );
