@@ -18,7 +18,7 @@ export default [
   {
     // Scripts de build/manutenção rodam fora do tsconfig dos packages
     // (eles não são publicados) e precisam console pra logar progresso.
-    files: ['scripts/**/*.ts', 'packages/*/scripts/**/*.ts'],
+    files: ['scripts/**/*.ts', 'packages/*/scripts/**/*.ts', 'site/scripts/**/*.ts'],
     languageOptions: {
       parserOptions: { project: false },
     },

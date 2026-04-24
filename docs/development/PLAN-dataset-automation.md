@@ -32,7 +32,7 @@ documentação de atribuição.
   tinham year-level que estourava heap Node)
 - Flag `--from-pending` — processa delta a partir de
   `state/pending.json` (produzido pelo `datasus-parquet`)
-- `packages/site/docs/data-license.md` — atribuição DATASUS
+- `site/docs/data-license.md` — atribuição DATASUS
   (Lei 12.527, Decreto 8.777) + CC-BY 4.0 da derivação Precisa
 
 ## Fora de escopo — foi pro `datasus-parquet`

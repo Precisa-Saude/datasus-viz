@@ -92,7 +92,7 @@ Estratégias:
 pnpm -F @datasus-viz/site build
 ```
 
-Gera `packages/site/dist/` (estático). Vite aplica _chunking_ manual
+Gera `site/dist/` (estático). Vite aplica _chunking_ manual
 separando `vendor-mapbox` e `vendor-react` em _bundles_ próprios para
 _cache hit_ em _deploys_ subsequentes.
 

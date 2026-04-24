@@ -48,7 +48,7 @@ pnpm upload:aws           # publica tudo no S3
 
 ### _Token_ do Mapbox
 
-Crie `packages/site/.env.local`:
+Crie `site/.env.local`:
 
 ```ini
 VITE_MAPBOX_TOKEN=pk.seu_token_aqui

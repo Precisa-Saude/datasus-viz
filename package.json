@@ -68,7 +68,7 @@
   "worktree": {
     "directoryPrefix": "datasus-viz",
     "portRegistry": "/tmp/datasus-viz-worktree-ports.json",
-    "buildCommand": "pnpm turbo run build --filter=./packages/*",
+    "buildCommand": "pnpm turbo run build --filter=./packages/* --filter=./site",
     "services": [
       {
         "name": "site",
