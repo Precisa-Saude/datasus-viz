@@ -1,3 +1,24 @@
+## [1.3.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.3.1...v1.3.2) (2026-04-24)
+
+### Bug Fixes
+
+* **ci:** usar contexto do repo atual no pr-review-responder ([#17](https://github.com/Precisa-Saude/datasus-viz/issues/17)) ([fae51eb](https://github.com/Precisa-Saude/datasus-viz/commit/fae51eb77e83fdb334b9f35607a95064485cfb8e))
+
+### Refactoring
+
+* **site:** mover packages/site → site/ pra alinhar com o ecossistema ([#22](https://github.com/Precisa-Saude/datasus-viz/issues/22)) ([b11b96b](https://github.com/Precisa-Saude/datasus-viz/commit/b11b96b4f677444d5dc48d32ef4c99f638819364))
+
+### Documentation
+
+* **site:** remover referencias obsoletas a datasus-brasil e branch PRE-206 ([#16](https://github.com/Precisa-Saude/datasus-viz/issues/16)) ([a2e73a5](https://github.com/Precisa-Saude/datasus-viz/commit/a2e73a5dcdaaf4be74a1f2d277eebdeb54a64b22))
+
+### Chores
+
+* **config:** precisa sync — governance/issue/PR templates ([#20](https://github.com/Precisa-Saude/datasus-viz/issues/20)) ([47ada22](https://github.com/Precisa-Saude/datasus-viz/commit/47ada223161b058cce08a1bc87c32631e43251cb))
+* **config:** precisa sync — publishPackages + site wiring + template refresh ([#19](https://github.com/Precisa-Saude/datasus-viz/issues/19)) ([669f0f7](https://github.com/Precisa-Saude/datasus-viz/commit/669f0f7065383cb407fdfe0b0fa7ab3fac0df235)), closes [Precisa-Saude/tooling#28](https://github.com/Precisa-Saude/tooling/issues/28)
+* **config:** remover shamefully-hoist=false do .npmrc ([#18](https://github.com/Precisa-Saude/datasus-viz/issues/18)) ([2022034](https://github.com/Precisa-Saude/datasus-viz/commit/20220347185ac7a5d8b0cf1671b2bcee9ef213d6)), closes [Precisa-Saude/tooling#26](https://github.com/Precisa-Saude/tooling/issues/26)
+* **config:** siteSourcePath=packages/site/ + sync do _deploy-site ([#21](https://github.com/Precisa-Saude/datasus-viz/issues/21)) ([9046862](https://github.com/Precisa-Saude/datasus-viz/commit/9046862ae61f7beca66055c0ecec42fa49c9752a)), closes [Precisa-Saude/tooling#29](https://github.com/Precisa-Saude/tooling/issues/29)
+
 ## [1.3.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.3.0...v1.3.1) (2026-04-24)
 
 ### Refactoring
