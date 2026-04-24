@@ -1,3 +1,13 @@
+## [1.3.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.2.0...v1.3.0) (2026-04-24)
+
+### Features
+
+* **site:** automação SIA-PA — provenance, detect-new, per-month refactor, data-license ([#13](https://github.com/Precisa-Saude/datasus-viz/issues/13)) ([d96c1db](https://github.com/Precisa-Saude/datasus-viz/commit/d96c1db85db577e13fea777f3bf25791e938d8e6))
+
+### Bug Fixes
+
+* **ci:** atualizar publish packages para apenas packages/cli ([#14](https://github.com/Precisa-Saude/datasus-viz/issues/14)) ([1cf5b77](https://github.com/Precisa-Saude/datasus-viz/commit/1cf5b778ff6ec02a2098617f608a162956e5229f))
+
 ## [1.2.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.1.0...v1.2.0) (2026-04-24)
 
 ### Features
