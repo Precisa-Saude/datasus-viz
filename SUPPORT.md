@@ -1,14 +1,14 @@
 # Suporte
 
-## Obtendo Ajuda
+## Como obter ajuda
 
 - **Reportar bugs**: [GitHub Issues](https://github.com/Precisa-Saude/datasus-viz/issues)
-- **Solicitar funcionalidades**: [GitHub Issues](https://github.com/Precisa-Saude/datasus-viz/issues)
+- **Solicitar features**: [GitHub Issues](https://github.com/Precisa-Saude/datasus-viz/issues)
 - **Perguntas e discussões**: [GitHub Discussions](https://github.com/Precisa-Saude/datasus-viz/discussions)
 
-## Antes de Abrir uma Issue
+## Antes de abrir uma issue
 
 1. Pesquise issues existentes para evitar duplicatas
 2. Inclua um exemplo mínimo reproduzível
-3. Especifique o pacote e versão (`@precisa-saude/datasus-dbc@0.1.0` ou `@precisa-saude/datasus@0.1.0`)
-4. Para problemas de decodificação, anexe o arquivo DBC problemático (ou um recorte mínimo que reproduza o erro) e indique qual vintage/dataset
+3. Especifique o pacote e a versão
+4. Inclua versões de Node/pnpm e o sistema operacional

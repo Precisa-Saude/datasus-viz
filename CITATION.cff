@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: datasus-brasil
+title: datasus-viz
 message: >-
   Se você utilizar este software em pesquisa acadêmica,
   por favor cite-o usando os metadados abaixo.
@@ -8,28 +8,25 @@ authors:
   - name: Precisa Saúde
     website: https://precisa-saude.com.br
 repository-code: https://github.com/Precisa-Saude/datasus-viz
-url: https://datasus-brasil.dev.br
 keywords:
   - datasus
   - sus
   - sia-sus
   - cnes
-  - dbc
-  - dbf
   - loinc
   - brasil
   - saúde
   - microdados
   - open-data
+  - geo-visualização
 license: Apache-2.0
 references:
   - type: data
     title: Agregados SIA-PA derivados do SIA-SUS (DATASUS / Ministério da Saúde)
     license: CC-BY-4.0
-    repository: https://github.com/Precisa-Saude/datasus-brasil
+    repository: https://github.com/Precisa-Saude/datasus-parquet
     notes: >-
-      Agregados publicados em releases do repositório (tag
-      `dataset-YYYY-MM`). Procedência, base legal e citação formal
-      em `packages/site/docs/data-license.md`. Após integração com
-      Zenodo, cada release recebe um DOI citável — substitua aqui
-      pelo DOI emitido.
+      Agregados publicados pelo pipeline de `datasus-parquet` e consumidos
+      via CloudFront/S3 pelo site. Procedência, base legal e citação formal
+      em `packages/site/docs/data-license.md`. Após integração com Zenodo,
+      cada release recebe um DOI citável — substitua aqui pelo DOI emitido.

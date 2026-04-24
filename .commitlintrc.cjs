@@ -5,10 +5,6 @@ module.exports = {
   ...base,
   rules: {
     ...base.rules,
-    'scope-enum': [
-      2,
-      'always',
-      ['dbc', 'core', 'cli', 'site', 'docs', 'ci', 'deps', 'lint', 'config'],
-    ],
+    'scope-enum': [2, 'always', ['site', 'cli', 'docs', 'ci', 'deps', 'lint', 'config']],
   },
 };
