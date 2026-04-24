@@ -13,7 +13,7 @@ import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { listBiomarkers } from '@precisa-saude/datasus';
+import { listBiomarkers } from '@precisa-saude/datasus-sdk';
 import duckdb from 'duckdb';
 
 interface IndexOut {

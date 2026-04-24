@@ -29,7 +29,7 @@ import {
   isSigtapLaboratorio,
   sia,
   type SiaProducaoAmbulatorialRecord,
-} from '@precisa-saude/datasus';
+} from '@precisa-saude/datasus-sdk';
 import duckdb from 'duckdb';
 
 interface Cli {
