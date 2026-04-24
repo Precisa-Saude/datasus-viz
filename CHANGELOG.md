@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.3.0...v1.3.1) (2026-04-24)
+
+### Refactoring
+
+* **site:** ler raw Parquet via HTTPS de datasus-parquet ([#15](https://github.com/Precisa-Saude/datasus-viz/issues/15)) ([68fbf44](https://github.com/Precisa-Saude/datasus-viz/commit/68fbf44b533bdde9169a0f2184782f34425f7d12))
+
 ## [1.3.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.2.0...v1.3.0) (2026-04-24)
 
 ### Features
