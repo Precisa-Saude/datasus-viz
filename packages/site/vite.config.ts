@@ -9,7 +9,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-mapbox': ['mapbox-gl'],
+          'vendor-maplibre': ['maplibre-gl', 'pmtiles'],
           'vendor-react': ['react', 'react-dom', 'react/jsx-runtime'],
         },
       },
