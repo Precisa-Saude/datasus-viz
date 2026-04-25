@@ -85,11 +85,17 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
     map.getCanvas().style.cursor = '';
     popup.remove();
   });
-  map.on('click', UF_FILL, (e) => {
+  // Click no mapa todo (não só UF_FILL) — `MUN_FILL` está acima do
+  // UF_FILL com fill-opacity 0 quando sem dado, e ainda capturava clicks
+  // intercedendo o handler de UF antes do drill-down. Aqui usamos
+  // queryRenderedFeatures restrito a UF_LAYER pra ignorar overlays.
+  map.on('click', (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf !== null) return;
-    const feature = e.features?.[0];
-    const sigla = String(feature?.properties?.sigla ?? feature?.id ?? '');
+    const feats = map.queryRenderedFeatures(e.point, { layers: [UF_FILL] });
+    const feature = feats[0];
+    if (!feature) return;
+    const sigla = String(feature.properties?.sigla ?? feature.id ?? '');
     if (!latest.availableUFs.includes(sigla)) return;
     latest.onUfClick(sigla);
   });

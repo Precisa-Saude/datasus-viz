@@ -62,8 +62,11 @@ export function addMapLayers(map: maplibregl.Map): void {
     });
   }
   if (!map.getLayer(MUN_FILL)) {
+    // visibility hidden por default: caso contrário a layer fica acima
+    // do UF_FILL com fill-opacity 0 e captura cliques destinados ao UF.
     map.addLayer({
       id: MUN_FILL,
+      layout: { visibility: 'none' },
       paint: {
         'fill-color': VIOLET_RAMP as unknown as maplibregl.ExpressionSpecification,
         'fill-opacity': [
