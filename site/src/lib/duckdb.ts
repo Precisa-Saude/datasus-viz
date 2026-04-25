@@ -1,7 +1,11 @@
 /**
- * DuckDB WASM singleton — bundle local via Vite `?url` em vez do
- * jsDelivr default. Evita CORS / Trusted-Types quirks em
- * cross-origin Blob workers.
+ * DuckDB WASM singleton — bundles carregados de jsDelivr CDN em vez
+ * de bundled localmente. Bundled-local cresce dist > 25 MB e excede
+ * o limite do Cloudflare Pages por arquivo. CDN também permite cache
+ * compartilhado entre projetos.
+ *
+ * Worker cross-origin é resolvido envolvendo o script CDN num Blob URL
+ * (mesmo padrão do `getJsDelivrBundles()` upstream).
  *
  * O banco é em memória; as tabelas-base vivem em S3 como Parquet e
  * são acessadas via `read_parquet('https://.../*.parquet')` direto
@@ -9,15 +13,6 @@
  */
 
 import * as duckdb from '@duckdb/duckdb-wasm';
-import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
-import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
-import duckdb_eh_wasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
-import duckdb_mvp_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
-
-const BUNDLES: duckdb.DuckDBBundles = {
-  eh: { mainModule: duckdb_eh_wasm, mainWorker: eh_worker },
-  mvp: { mainModule: duckdb_mvp_wasm, mainWorker: mvp_worker },
-};
 
 let dbPromise: Promise<duckdb.AsyncDuckDB> | null = null;
 let connPromise: Promise<duckdb.AsyncDuckDBConnection> | null = null;
@@ -25,11 +20,19 @@ let connPromise: Promise<duckdb.AsyncDuckDBConnection> | null = null;
 async function getDb(): Promise<duckdb.AsyncDuckDB> {
   if (!dbPromise) {
     dbPromise = (async () => {
+      const BUNDLES = duckdb.getJsDelivrBundles();
       const bundle = await duckdb.selectBundle(BUNDLES);
-      const worker = new Worker(bundle.mainWorker!, { type: 'module' });
+      // Cross-origin worker via Blob URL (padrão DuckDB-wasm).
+      const workerUrl = URL.createObjectURL(
+        new Blob([`importScripts("${bundle.mainWorker!}");`], {
+          type: 'text/javascript',
+        }),
+      );
+      const worker = new Worker(workerUrl);
       const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
       const db = new duckdb.AsyncDuckDB(logger, worker);
       await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+      URL.revokeObjectURL(workerUrl);
       return db;
     })();
   }
