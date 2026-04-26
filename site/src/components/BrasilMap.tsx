@@ -85,11 +85,17 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
     map.getCanvas().style.cursor = '';
     popup.remove();
   });
-  map.on('click', UF_FILL, (e) => {
+  // Click no mapa todo (não só UF_FILL) — `MUN_FILL` está acima do
+  // UF_FILL com fill-opacity 0 quando sem dado, e ainda capturava clicks
+  // intercedendo o handler de UF antes do drill-down. Aqui usamos
+  // queryRenderedFeatures restrito a UF_LAYER pra ignorar overlays.
+  map.on('click', (e) => {
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf !== null) return;
-    const feature = e.features?.[0];
-    const sigla = String(feature?.properties?.sigla ?? feature?.id ?? '');
+    const feats = map.queryRenderedFeatures(e.point, { layers: [UF_FILL] });
+    const feature = feats[0];
+    if (!feature) return;
+    const sigla = String(feature.properties?.sigla ?? feature.id ?? '');
     if (!latest.availableUFs.includes(sigla)) return;
     latest.onUfClick(sigla);
   });
@@ -153,7 +159,11 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
   });
 
   // Reset automático: zoom out no drill-down volta pra visão Brasil.
-  map.on('zoomend', () => {
+  // Só reage a zoom-out do usuário (wheel/pinch/dblclick) — programático
+  // (fitBounds do próprio drilldown) não tem originalEvent e fica de fora,
+  // senão o fit pra UF dispara o reset e cancela o drill antes de mostrar.
+  map.on('zoomend', (e) => {
+    if (!e.originalEvent) return;
     const latest = refs.latestProps.current;
     if (!latest || latest.selectedUf === null) return;
     if (map.getZoom() < 4.2) latest.onZoomOutReset();
@@ -174,6 +184,9 @@ export function BrasilMap(props: BrasilMapProps) {
     if (!containerRef.current) return;
     ensurePmtilesProtocol();
     const map = new maplibregl.Map({
+      // compact: true mantém a atribuição colapsada no ícone (i) por
+      // padrão, sem ocupar espaço sobre o mapa.
+      attributionControl: { compact: true },
       bearing: 180,
       bounds: BRAZIL_BOUNDS,
       container: containerRef.current,
