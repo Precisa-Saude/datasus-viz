@@ -36,7 +36,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 480
     env:
       AWS_REGION: sa-east-1
       BUCKET: ${{ secrets.S3_BUCKET }}
