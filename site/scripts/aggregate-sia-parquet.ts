@@ -261,20 +261,38 @@ async function processMonth(
 async function main(): Promise<void> {
   const cli = parseArgs(process.argv.slice(2));
   mkdirSync(cli.outDir, { recursive: true });
+  // Concurrência por UF/ano: cada (year, uf) processa seus 12 meses em
+  // paralelo. CloudFront I/O + DuckDB scan são embaraçosamente paralelos
+  // por mês; sequencial gastava ~6s/mês × 6156 meses = 6h+ e batia no
+  // hard cap de 6h dos runners GH-hosted. Em paralelo dentro do UF cada
+  // UF/ano fica limitado pelo mês mais lento (~10-20s), 27 UFs × 19 anos
+  // ≈ 1h de wall time. Ordenamento da saída preservado: linha por
+  // [ano] UF com markers reordenados em mês crescente.
   process.stderr.write(
     `Agregando SIA-PA (raw HTTPS → filtered+LOINC) | UFs=${cli.ufs.join(',')} | ` +
       `anos=${cli.years.join(',')} | source=${cli.sourceUrl}\n`,
   );
 
+  // allSettled em vez de Promise.all: se um mês falhar, os outros 11
+  // ainda escrevem suas partições. Erros viram marker 'e' na saída
+  // pra não passar batido. Idempotência cuida do retry no próximo run.
   for (const year of cli.years) {
     for (const uf of cli.ufs) {
-      process.stderr.write(`[${year}] ${uf}: `);
-      for (let month = 1; month <= 12; month += 1) {
-        const r = await processMonth(cli, uf, year, month);
-        const marker = r.status === 'done' ? '·' : r.status === 'skipped' ? '=' : 'x';
-        process.stderr.write(`${month}${marker}`);
-      }
-      process.stderr.write('\n');
+      const months = Array.from({ length: 12 }, (_, i) => i + 1);
+      const settled = await Promise.allSettled(months.map((m) => processMonth(cli, uf, year, m)));
+      const markers = settled.map((s, i) => {
+        const m = i + 1;
+        if (s.status === 'rejected') {
+          process.stderr.write(
+            `\n  ✗ ${uf} ${year}-${String(m).padStart(2, '0')}: ` +
+              `${(s.reason as Error).message}\n`,
+          );
+          return `${m}e`;
+        }
+        const sym = s.value.status === 'done' ? '·' : s.value.status === 'skipped' ? '=' : 'x';
+        return `${m}${sym}`;
+      });
+      process.stderr.write(`[${year}] ${uf}: ${markers.join('')}\n`);
     }
   }
 
