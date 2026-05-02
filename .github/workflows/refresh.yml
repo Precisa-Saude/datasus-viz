@@ -92,6 +92,17 @@ jobs:
             echo "Manifesto mudou — republicando."
           fi
 
+      # Re-issue STS credentials antes do Upload. O Aggregate pode rodar
+      # >1h (ex.: run 25239782213 levou 1h47m), e o token assumido no
+      # início do job tem TTL default de 1h — Upload falhava com
+      # ExpiredToken. Re-call do configure-aws-credentials renova.
+      - name: Re-configure AWS credentials (refresh token before upload)
+        if: steps.diff.outputs.changed == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Upload (parquet-opt + manifest + geo)
         if: steps.diff.outputs.changed == 'true'
         run: pnpm -F @datasus-viz/site upload:aws
