@@ -131,13 +131,29 @@ interface AggregatedRow {
   volume: number;
 }
 
+// Pre-install httpfs uma vez no startup. Sem isso, 12 in-memory DuckDBs
+// rodando `INSTALL httpfs` em paralelo (um por mês via Promise.allSettled)
+// brigam pelo mesmo extension cache em ~/.duckdb/extensions/ e geram
+// SIGSEGV no native module — observado em run 25270535305 que crashou
+// com exit 139 ao processar 2012/AP→BA.
+async function ensureHttpfsInstalled(): Promise<void> {
+  return new Promise((res, rej) => {
+    const db = new duckdb.Database(':memory:');
+    db.all('INSTALL httpfs;', (err) => {
+      db.close(() => (err ? rej(err) : res()));
+    });
+  });
+}
+
 function aggregateMonthSql(url: string): Promise<AggregatedRow[]> {
   return new Promise((res, rej) => {
     const db = new duckdb.Database(':memory:');
     // Filtro SIGTAP 02.02 + agregação em SQL. Retorna milhares de
     // linhas (município × SIGTAP) em vez de milhões de registros brutos.
+    // LOAD httpfs por DB (cada in-memory DB precisa ativar a extensão);
+    // INSTALL acontece uma vez via ensureHttpfsInstalled() antes do fanout.
     db.all(
-      `INSTALL httpfs; LOAD httpfs;
+      `LOAD httpfs;
        SELECT
          CAST(PA_UFMUN AS VARCHAR) AS municipioCode,
          CAST(PA_PROC_ID AS VARCHAR) AS sigtap,
@@ -261,6 +277,7 @@ async function processMonth(
 async function main(): Promise<void> {
   const cli = parseArgs(process.argv.slice(2));
   mkdirSync(cli.outDir, { recursive: true });
+  await ensureHttpfsInstalled();
   // Concurrência por UF/ano: cada (year, uf) processa seus 12 meses em
   // paralelo. CloudFront I/O + DuckDB scan são embaraçosamente paralelos
   // por mês; sequencial gastava ~6s/mês × 6156 meses = 6h+ e batia no
