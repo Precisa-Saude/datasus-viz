@@ -17,11 +17,6 @@ Inclua:
 
 Confirmaremos o recebimento em até 48 horas e forneceremos um cronograma para resolução.
 
-## Escopo
+## Divulgação
 
-Este projeto contém decoders de formato binário (DBC/DBF), cliente FTP e schemas de microdados públicos do DATASUS. Preocupações de segurança podem incluir:
-
-- Vulnerabilidades no decoder (overflow, out-of-bounds read) ao processar arquivos DBC maliciosamente construídos
-- Problemas de segurança no cliente FTP (SSRF, path traversal em cache)
-- Vulnerabilidades em dependências
-- Vazamento inadvertido de dados sensíveis em logs/mensagens de erro
+A divulgação é coordenada de forma privada. Correções são lançadas no(s) pacote(s) afetado(s) e registradas no CHANGELOG.
