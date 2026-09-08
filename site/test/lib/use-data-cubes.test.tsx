@@ -5,6 +5,7 @@ vi.mock('@/lib/duckdb', () => ({
   queryAll: vi.fn(async () => []),
 }));
 
+import { setParquetOptVersion } from '@/lib/data-source';
 import { queryAll } from '@/lib/duckdb';
 import { useDataCubes } from '@/lib/use-data-cubes';
 
@@ -14,6 +15,9 @@ const COMPETENCIAS = ['2024-01', '2024-02', '2024-03'];
 
 beforeEach(() => {
   queryAllMock.mockReset();
+  // Em runtime quem define isso é o manifest; sem versão os builders de
+  // URL lançam de propósito (ver `data-source.ts`).
+  setParquetOptVersion('v20260518T215851');
 });
 
 describe('useDataCubes', () => {

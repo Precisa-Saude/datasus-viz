@@ -33,9 +33,20 @@ export function setParquetOptVersion(v: string | undefined): void {
 }
 
 function parquetOptPrefix(): string {
-  return parquetOptVersion === ''
-    ? `${DATA_BASE_URL}/parquet-opt`
-    : `${DATA_BASE_URL}/parquet-opt/${parquetOptVersion}`;
+  // Sem versão não existe URL válida: o prefixo legado `parquet-opt/`
+  // (sem versão) foi aposentado e hoje responde 403 no bucket. Chegar
+  // aqui significa que alguma query disparou antes de o manifest
+  // resolver — falhar com mensagem explícita é melhor do que emitir uma
+  // URL morta e receber um erro de HTTP genérico do DuckDB (foi assim
+  // que o histograma de competências quebrou em silêncio).
+  if (parquetOptVersion === '') {
+    throw new Error(
+      'parquetOptVersion não definida: uma query tentou ler `parquet-opt/` ' +
+        'antes de o manifest carregar. Aguarde `loadManifest()` (que chama ' +
+        '`setParquetOptVersion`) antes de consultar os agregados.',
+    );
+  }
+  return `${DATA_BASE_URL}/parquet-opt/${parquetOptVersion}`;
 }
 
 // Camada consolidada pelo `consolidate-parquet.ts` pra minimizar GETs

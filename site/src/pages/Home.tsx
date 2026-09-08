@@ -100,18 +100,25 @@ export default function Home() {
 
   useEffect(() => {
     loadManifest().then(
-      (m) => setManifest(m),
-      (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
-    );
-    fetchVolumeByCompetencia().then(
-      (rows) => {
-        const map = new Map<string, number>();
-        for (const r of rows) map.set(r.competencia, r.volumeExames);
-        setVolumeByCompetencia(map);
+      (m) => {
+        setManifest(m);
+        // Encadeado (e não em paralelo) de propósito: `fetchVolumeByCompetencia`
+        // lê `parquet-opt/<versão>/uf-totals.parquet`, e a versão só existe
+        // depois que o manifest resolve e chama `setParquetOptVersion`.
+        // Disparar junto montava a URL sem versão — hoje 403 no bucket — e o
+        // histograma ficava vazio silenciosamente.
+        fetchVolumeByCompetencia().then(
+          (rows) => {
+            const map = new Map<string, number>();
+            for (const r of rows) map.set(r.competencia, r.volumeExames);
+            setVolumeByCompetencia(map);
+          },
+          // Histograma é decoração; sem dado, brush ainda funciona.
+          // eslint-disable-next-line no-console
+          (e: unknown) => console.warn('[fetchVolumeByCompetencia]', e),
+        );
       },
-      // Histograma é decoração; sem dado, brush ainda funciona.
-      // eslint-disable-next-line no-console
-      (e: unknown) => console.warn('[fetchVolumeByCompetencia]', e),
+      (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
     );
   }, []);
 
@@ -136,7 +143,11 @@ export default function Home() {
   // Detalhe LOINC×mês de UM município: pequeno o suficiente pra carregar
   // todos os meses de uma vez e filtrar client-side via previewRange.
   useEffect(() => {
-    if (!selectedUf || !codigoParam) {
+    // `manifest` no guard não é decorativo: `fetchMunicipioDetail` monta
+    // `parquet-opt/<versão>/uf=XX/part.parquet`, e num deep link
+    // `/uf/SP/mun/355030` os params da URL já chegam preenchidos no mount
+    // — antes de `setParquetOptVersion`. Sem o guard, a URL saía sem versão.
+    if (!manifest || !selectedUf || !codigoParam) {
       setMunicipioDetailData(null);
       return;
     }
@@ -152,7 +163,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [selectedUf, codigoParam]);
+  }, [manifest, selectedUf, codigoParam]);
 
   // Nome do município pro selectedMun derivado do cubo municipal.
   const selectedMun = useMemo<null | SelectedMunicipio>(() => {

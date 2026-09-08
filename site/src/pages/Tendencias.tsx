@@ -161,22 +161,31 @@ export default function Tendencias() {
   };
 
   useEffect(() => {
-    Promise.all([
-      loadManifest(),
-      fetchTopLoincsByVolume(MAX_SERIES),
-      fetchTopUfsByVolume(MAX_SERIES),
-    ]).then(
-      ([m, topLoincs, topUfs]) => {
-        const seed = computeSeedState(m, topLoincs, topUfs, parseUrlState(searchParams));
-        setManifest(m);
-        setMode(seed.mode);
-        if (seed.loincs.length > 0) setLoincs(seed.loincs);
-        setSingleLoinc(seed.singleLoinc);
-        setUfSigla(seed.ufSigla);
-        if (seed.ufList.length > 0) setUfList(seed.ufList);
-      },
-      (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
-    );
+    // Manifest primeiro, top-N depois. As duas queries de top-N leem
+    // `parquet-opt/<versão>/uf-totals.parquet`, e a versão só é definida
+    // por `setParquetOptVersion` quando o manifest resolve — em
+    // `Promise.all` elas montavam a URL sem versão (403 no bucket) e o
+    // seed dos seletores vinha vazio.
+    loadManifest()
+      .then(async (m) => {
+        const [topLoincs, topUfs] = await Promise.all([
+          fetchTopLoincsByVolume(MAX_SERIES),
+          fetchTopUfsByVolume(MAX_SERIES),
+        ]);
+        return [m, topLoincs, topUfs] as const;
+      })
+      .then(
+        ([m, topLoincs, topUfs]) => {
+          const seed = computeSeedState(m, topLoincs, topUfs, parseUrlState(searchParams));
+          setManifest(m);
+          setMode(seed.mode);
+          if (seed.loincs.length > 0) setLoincs(seed.loincs);
+          setSingleLoinc(seed.singleLoinc);
+          setUfSigla(seed.ufSigla);
+          if (seed.ufList.length > 0) setUfList(seed.ufList);
+        },
+        (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
+      );
     // bootKey nas deps permite ao botão "Tentar novamente" re-executar
     // o boot completo (manifest + top-N).
   }, [bootKey]);

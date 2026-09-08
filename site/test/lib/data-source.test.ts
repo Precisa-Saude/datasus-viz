@@ -25,9 +25,11 @@ describe('data-source URLs', () => {
     expect(MANIFEST_URL).toBe(`${DATA_BASE_URL}/manifest/index.json`);
   });
 
-  it('ufTotalsUrl aponta pro agregado nacional (sem versão = legacy path)', () => {
+  it('ufTotalsUrl lança quando a versão ainda não foi definida', () => {
+    // O prefixo legado sem versão responde 403 no bucket — emitir essa
+    // URL só produzia falha silenciosa rio abaixo.
     setParquetOptVersion(undefined);
-    expect(ufTotalsUrl()).toBe(`${DATA_BASE_URL}/parquet-opt/uf-totals.parquet`);
+    expect(() => ufTotalsUrl()).toThrow(/parquetOptVersion não definida/);
   });
 
   it('ufTotalsUrl insere prefixo de versão quando setado', () => {
@@ -38,9 +40,9 @@ describe('data-source URLs', () => {
 });
 
 describe('ufPartitionUrl', () => {
-  it('monta URL no layout Hive uf=XX (sem versão)', () => {
+  it('lança quando a versão ainda não foi definida', () => {
     setParquetOptVersion(undefined);
-    expect(ufPartitionUrl('AC')).toBe(`${DATA_BASE_URL}/parquet-opt/uf=AC/part.parquet`);
+    expect(() => ufPartitionUrl('AC')).toThrow(/parquetOptVersion não definida/);
   });
 
   it('insere prefixo de versão quando setado', () => {
@@ -52,7 +54,9 @@ describe('ufPartitionUrl', () => {
   });
 
   it('preserva o case da sigla', () => {
+    setParquetOptVersion('v20260518T215851');
     expect(ufPartitionUrl('SP')).toContain('uf=SP/');
+    setParquetOptVersion(undefined);
   });
 });
 

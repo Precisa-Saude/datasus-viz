@@ -4,6 +4,7 @@ vi.mock('@/lib/duckdb', () => ({
   queryAll: vi.fn(async () => []),
 }));
 
+import { setParquetOptVersion } from '@/lib/data-source';
 import { queryAll } from '@/lib/duckdb';
 import {
   fetchAnomalies,
@@ -26,6 +27,9 @@ beforeEach(() => {
   queryAllMock.mockClear();
   queryAllMock.mockResolvedValue([]);
   fetchSpy.mockReset();
+  // Em runtime quem define isso é o manifest; sem versão os builders de
+  // URL lançam de propósito (ver `data-source.ts`).
+  setParquetOptVersion('v20260518T215851');
 });
 
 afterEach(() => {

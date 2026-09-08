@@ -5,12 +5,16 @@ vi.mock('@/lib/duckdb', () => ({
 }));
 
 import { buildMunicipioCube, buildUfCube, lookupRange } from '@/lib/data-cube';
+import { setParquetOptVersion } from '@/lib/data-source';
 import { queryAll } from '@/lib/duckdb';
 
 const queryAllMock = vi.mocked(queryAll);
 
 beforeEach(() => {
   queryAllMock.mockReset();
+  // Em runtime quem define isso é o manifest; sem versão os builders de
+  // URL lançam de propósito (ver `data-source.ts`).
+  setParquetOptVersion('v20260518T215851');
 });
 
 const COMPETENCIAS = ['2024-01', '2024-02', '2024-03'];
