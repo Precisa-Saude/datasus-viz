@@ -1,3 +1,9 @@
+## [1.10.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.9.0...v1.10.0) (2026-09-09)
+
+### Features
+
+* **site:** nomes de município, double-click no histograma e cabeçalho opaco ([#63](https://github.com/Precisa-Saude/datasus-viz/issues/63)) ([72bac88](https://github.com/Precisa-Saude/datasus-viz/commit/72bac882c4870101321c697bce47508f554fa5c5))
+
 ## [1.9.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.8.0...v1.9.0) (2026-09-09)
 
 ### Features
