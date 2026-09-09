@@ -1,3 +1,9 @@
+## [1.9.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.8.0...v1.9.0) (2026-09-09)
+
+### Features
+
+* **site:** cabeçalho opaco na tabela e link pro LOINC oficial ([#62](https://github.com/Precisa-Saude/datasus-viz/issues/62)) ([d7b7846](https://github.com/Precisa-Saude/datasus-viz/commit/d7b7846591bfe52f360bd498c2a41b869755dd98))
+
 ## [1.8.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.7.7...v1.8.0) (2026-09-09)
 
 ### Features
