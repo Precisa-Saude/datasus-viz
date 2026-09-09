@@ -1,3 +1,4 @@
+import { Info } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -5,6 +6,7 @@ import type { AnomalyHit, AnomalyKind, PopulationLookup } from '@/lib/anomaly';
 import { formatCompetencia } from '@/lib/format';
 
 import { AnomalyDumbbell, isDumbbellLogScale } from './AnomalyDumbbell';
+import { InfoTooltip } from './ui/info-tooltip';
 import { Pagination } from './ui/pagination';
 
 /**
@@ -34,6 +36,22 @@ const BASELINE_LABELS: Record<AnomalyKind, string> = {
   'per-capita': 'baseline (mín. por 1k hab.)',
   'price-ratio': 'mediana nacional',
   spike: 'baseline (mediana)',
+};
+
+/**
+ * O que a bolinha de referência representa em cada detector. Sem isso,
+ * "baseline (mediana)" não diz mediana de quê — do próprio município ao
+ * longo da série, e não de um agregado nacional.
+ */
+const BASELINE_HELP: Record<AnomalyKind, string> = {
+  concentration:
+    'O corte do detector: 10× a fatia da população que o município representa. Acima disso, ele concentra muito mais exames do que o tamanho dele explicaria.',
+  'per-capita':
+    'O piso do detector: 50 exames por mil habitantes no mês. Só entram municípios de 5 mil a 50 mil habitantes, onde o volume não é efeito de escala.',
+  'price-ratio':
+    'A mediana nacional de reais por exame naquele exame e ano. O ponto observado é o valor médio pago no município.',
+  spike:
+    'A mediana do próprio município naquele exame, ao longo de toda a série — não uma média nacional. O ponto observado é o volume do mês marcado.',
 };
 
 export interface AnomalyDetectorTableProps {
@@ -107,6 +125,14 @@ export function AnomalyDetectorTable({
           <span className="inline-flex items-center gap-1">
             <span className="bg-muted-foreground inline-block size-2 rounded-full" />
             {BASELINE_LABELS[kind]}
+            <InfoTooltip
+              ariaLabel={`O que é ${BASELINE_LABELS[kind]}`}
+              className="text-muted-foreground hover:text-foreground"
+              trigger={<Info aria-hidden="true" className="size-3" />}
+            >
+              <p className="text-foreground font-semibold">{BASELINE_LABELS[kind]}</p>
+              <p className="text-muted-foreground mt-1">{BASELINE_HELP[kind]}</p>
+            </InfoTooltip>
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="inline-block size-2 rounded-full" style={{ backgroundColor: color }} />

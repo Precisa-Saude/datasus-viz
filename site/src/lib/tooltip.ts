@@ -35,3 +35,18 @@ export function buildOverviewTooltipHtml(args: {
     <div style="margin-top:6px"><strong>${formatInt(args.totalValue)}</strong> ${args.totalLabel}</div>
   </div>`;
 }
+
+/**
+ * Legenda do tooltip de um município no mapa.
+ *
+ * Um município sem laboratório próprio nunca aparece no agregado: o SIA
+ * contabiliza a análise no estabelecimento executor, então a coleta sai
+ * dali e o exame é faturado onde foi processado. Dizer só "sem exames
+ * faturados nesta competência" sugeria lacuna de um mês, quando na
+ * verdade o município nunca aparece na série.
+ */
+export function municipioSubtitle(hasData: boolean, temSerie: boolean): string {
+  if (hasData) return 'Clique para ver todos os exames';
+  if (temSerie) return 'Sem exames faturados nesta competência';
+  return 'Sem análises laboratoriais em toda a série — podem ser faturadas em outro município';
+}
