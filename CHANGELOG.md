@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.7.7...v1.8.0) (2026-09-09)
+
+### Features
+
+* **site:** escala robusta no mapa e alerta de volume atípico ([#61](https://github.com/Precisa-Saude/datasus-viz/issues/61)) ([f46eb6c](https://github.com/Precisa-Saude/datasus-viz/commit/f46eb6cf8ff847cbb0b41d5c4481f9fe7d0bb08e))
+
 ## [1.7.7](https://github.com/Precisa-Saude/datasus-viz/compare/v1.7.6...v1.7.7) (2026-09-09)
 
 ### Bug Fixes
