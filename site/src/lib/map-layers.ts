@@ -112,20 +112,45 @@ export function toggleDrilldown(map: maplibregl.Map, uf: null | string): void {
 }
 
 /**
- * Normalização por raiz quadrada — `sqrt(v) / sqrt(max)`. Linear
- * empurra 24 das 27 UFs pra faixa pálida do ramp porque SP tem ~3×
- * o volume da segunda colocada; log compressa demais e UFs do
- * meio (PA, GO) viram quase pretas. Sqrt é o meio-termo: SP fica
- * no topo (= 1), MG/RJ aterrissam em torno de 0.55, PA em ~0.3,
- * RR em ~0.05 — distribuição visualmente próxima da percepção de
- * área (regra clássica em choropleths com cauda longa).
+ * Escala por posição relativa (percentil), não por razão com o máximo.
  *
- * `Math.sqrt(0) === 0`, então UFs sem dado mapeiam pra 0 sem
- * div-by-zero.
+ * A escala anterior era `sqrt(v / max)`. Ela falha quando a cauda é
+ * longa — e no SIA-PA ela é: em MG/2022-06, a mediana municipal é
+ * ~1.500 exames e o máximo ~1,27 milhão (Belo Horizonte), 838×. Com
+ * `sqrt(v/max)`, **569 dos 583 municípios** caíam na faixa mais clara
+ * do ramp; o mapa inteiro virava um bloco pálido com um polígono
+ * escuro.
+ *
+ * Pior: como o denominador é o máximo, um único registro anômalo da
+ * fonte reescala todo mundo. Careaçu-MG (~6.800 habitantes) aparece no
+ * SIA-PA de 2022-06 com 223.415 dosagens de ferro num único registro,
+ * contra baseline de 3/mês — 87% de todo o ferro de Minas. Um valor
+ * desses empurra o resto do estado pro branco.
+ *
+ * Percentil é imune a isso: a cor depende de **quantos** municípios
+ * têm volume menor, não de quanto o maior é maior. O outlier continua
+ * no topo da escala (é o maior), mas não comprime mais ninguém.
+ * Empates recebem a mesma cor.
+ *
+ * O custo é perder calibração absoluta — cor não é mais proporcional a
+ * volume. O tooltip já compensa: mostra volume absoluto e "Rank N/total".
  */
-function sqrtNormalize(value: number, max: number): number {
-  if (max <= 0) return 0;
-  return Math.sqrt(Math.max(0, value) / max);
+export function buildPercentileScale(values: number[]): (value: number) => number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  return (value: number): number => {
+    if (n <= 1) return n === 1 ? 1 : 0;
+    // Índice do primeiro elemento >= value (lower bound): conta quantos
+    // são estritamente menores, então empates compartilham a posição.
+    let lo = 0;
+    let hi = n;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if ((sorted[mid] as number) < value) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo / (n - 1);
+  };
 }
 
 /**
@@ -154,8 +179,7 @@ export function pushUfState(map: maplibregl.Map, byUf: Map<string, BinTotals>): 
   // `lib/data-cube.ts`); aqui só normalizamos pelo máximo (em sqrt,
   // pra não deixar SP achatar o resto do país) e empurramos ao
   // MapLibre. Também persistimos rank/total pro tooltip.
-  let max = 1;
-  for (const v of byUf.values()) if (v.volume > max) max = v.volume;
+  const scale = buildPercentileScale([...byUf.values()].map((v) => v.volume));
 
   const ranks = rankByVolume(byUf);
   const total = byUf.size;
@@ -164,7 +188,7 @@ export function pushUfState(map: maplibregl.Map, byUf: Map<string, BinTotals>): 
     map.setFeatureState(
       { id: sigla, source: SOURCE_ID, sourceLayer: UF_LAYER },
       {
-        normalizado: sqrtNormalize(agg.volume, max),
+        normalizado: scale(agg.volume),
         rank: ranks.get(sigla) ?? null,
         rankTotal: total,
         ufName: sigla,
@@ -185,7 +209,6 @@ export interface MunicipioStatePush {
    *  pelas chamadas de patch — não precisa recalcular ranks/max em
    *  cada `sourcedata`. */
   byMun: Map<string, { municipioNome: string; valor: number; volume: number }>;
-  max: number;
   /** Chaves (`codarea[0..6]`) que ainda não tiveram `setFeatureState`
    *  aplicada porque a feature correspondente não estava em viewport
    *  no momento da chamada. O caller deve revisitar via `sourcedata` e
@@ -194,6 +217,8 @@ export interface MunicipioStatePush {
    *  depois (zoom/pan/tile load tardio). */
   pending: Set<string>;
   ranks: Map<string, number>;
+  /** Escala de percentil pré-construída sobre a distribuição atual. */
+  scale: (value: number) => number;
   total: number;
 }
 
@@ -209,7 +234,7 @@ function setStateFor(
     { id, source: SOURCE_ID, sourceLayer: MUN_LAYER },
     {
       municipio: agg.municipioNome,
-      normalizado: sqrtNormalize(agg.volume, ctx.max),
+      normalizado: ctx.scale(agg.volume),
       rank: ctx.ranks.get(key6) ?? null,
       rankTotal: ctx.total,
       valor: agg.valor,
@@ -252,21 +277,19 @@ export function pushMunicipioState(
   byMunicipio: Map<string, BinTotals>,
 ): MunicipioStatePush {
   const byMun = new Map<string, { municipioNome: string; valor: number; volume: number }>();
-  let max = 1;
   for (const v of byMunicipio.values()) {
     const key6 = v.bin.slice(0, 6);
     const prev = byMun.get(key6) ?? { municipioNome: v.label, valor: 0, volume: 0 };
     prev.volume += v.volume;
     prev.valor += v.valor;
     byMun.set(key6, prev);
-    if (prev.volume > max) max = prev.volume;
   }
   const ranks = rankByVolume(byMun);
   const ctx: MunicipioStatePush = {
     byMun,
-    max,
     pending: new Set(byMun.keys()),
     ranks,
+    scale: buildPercentileScale([...byMun.values()].map((v) => v.volume)),
     total: byMun.size,
   };
   // Wipe stale state UMA vez — chamadas subsequentes de `applyMunicipioStatePatch`
