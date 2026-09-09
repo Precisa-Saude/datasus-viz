@@ -1,3 +1,9 @@
+## [1.12.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.12.0...v1.12.1) (2026-09-09)
+
+### Bug Fixes
+
+* **site:** régua de competência ancorada à direita, sem cobrir a legenda ([#66](https://github.com/Precisa-Saude/datasus-viz/issues/66)) ([d40448f](https://github.com/Precisa-Saude/datasus-viz/commit/d40448f78101f0d19f5ff5509160bac01ec17f56))
+
 ## [1.12.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.11.0...v1.12.0) (2026-09-09)
 
 ### Features
