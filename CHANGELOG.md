@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.11.0...v1.12.0) (2026-09-09)
+
+### Features
+
+* **site:** copy de município sem laboratório e explicação do baseline ([#65](https://github.com/Precisa-Saude/datasus-viz/issues/65)) ([2794b97](https://github.com/Precisa-Saude/datasus-viz/commit/2794b976366754403c796fa38f7a26736217438a))
+
 ## [1.11.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.10.0...v1.11.0) (2026-09-09)
 
 ### Features
