@@ -1,3 +1,24 @@
+## [1.7.7](https://github.com/Precisa-Saude/datasus-viz/compare/v1.7.6...v1.7.7) (2026-09-09)
+
+### Bug Fixes
+
+* **ci:** guard de release compara desde a última release, não o push ([#56](https://github.com/Precisa-Saude/datasus-viz/issues/56)) ([4dd5ff1](https://github.com/Precisa-Saude/datasus-viz/commit/4dd5ff135eba49002856c384bea0f8b35850b8dc))
+* **ci:** publish-watch aceita pacote sem tag quando bate com o package.json ([#55](https://github.com/Precisa-Saude/datasus-viz/issues/55)) ([68c7cbf](https://github.com/Precisa-Saude/datasus-viz/commit/68c7cbf726bb5f6a824d2b84bc9d5cb366b62ef4)), closes [#48](https://github.com/Precisa-Saude/datasus-viz/issues/48) [tooling#52](https://github.com/Precisa-Saude/tooling/issues/52)
+* **ci:** publish-watch compara a versão do pacote, não a maior tag ([#54](https://github.com/Precisa-Saude/datasus-viz/issues/54)) ([4533832](https://github.com/Precisa-Saude/datasus-viz/commit/45338328330e7ac38c72431b724fbc6b041dedd0)), closes [tooling#51](https://github.com/Precisa-Saude/tooling/issues/51)
+* **ci:** restaura require_package_changes: false e declara a divergência ([#60](https://github.com/Precisa-Saude/datasus-viz/issues/60)) ([3a844d8](https://github.com/Precisa-Saude/datasus-viz/commit/3a844d8c3e63d78d55ffa82648932677f7101562)), closes [#52](https://github.com/Precisa-Saude/datasus-viz/issues/52) [#36](https://github.com/Precisa-Saude/datasus-viz/issues/36)
+* **site:** aguarda o manifest antes de consultar o parquet versionado ([#59](https://github.com/Precisa-Saude/datasus-viz/issues/59)) ([ef54f53](https://github.com/Precisa-Saude/datasus-viz/commit/ef54f5332aecfc511b4fda7c64ab53b0310e60df))
+
+### CI/CD
+
+* atualizar GitHub Actions para o runtime Node 24 ([#50](https://github.com/Precisa-Saude/datasus-viz/issues/50)) ([f892f9e](https://github.com/Precisa-Saude/datasus-viz/commit/f892f9efc8d88e3ef5aea747d7ac795414161021))
+* sincroniza template de review-dispatch (pr_number como number) ([#58](https://github.com/Precisa-Saude/datasus-viz/issues/58)) ([a128781](https://github.com/Precisa-Saude/datasus-viz/commit/a12878153d416c41b0f45322f19f48e3b4e77035))
+
+### Chores
+
+* **ci:** publish-watch passa de cron 15min para diário ([#47](https://github.com/Precisa-Saude/datasus-viz/issues/47)) ([faad2b9](https://github.com/Precisa-Saude/datasus-viz/commit/faad2b9396d739253366af74541f923f8385bcec))
+* **ci:** sincroniza templates do cli 1.13.1 ([#53](https://github.com/Precisa-Saude/datasus-viz/issues/53)) ([b27e7d5](https://github.com/Precisa-Saude/datasus-viz/commit/b27e7d538583ecd88804d852df2c24404e65db60)), closes [tooling#47](https://github.com/Precisa-Saude/tooling/issues/47) [tooling#48](https://github.com/Precisa-Saude/tooling/issues/48) [tooling#50](https://github.com/Precisa-Saude/tooling/issues/50)
+* **ci:** sincroniza templates e declara divergências deliberadas ([#52](https://github.com/Precisa-Saude/datasus-viz/issues/52)) ([4b6e2c8](https://github.com/Precisa-Saude/datasus-viz/commit/4b6e2c82c63cc35af95da10921c939bf8f202b29))
+
 ## [1.7.6](https://github.com/Precisa-Saude/datasus-viz/compare/v1.7.5...v1.7.6) (2026-05-19)
 
 ### Bug Fixes
