@@ -40,6 +40,15 @@ Valid scopes: `site`, `cli`, `docs`, `ci`, `deps`, `lint`, `config`.
 Arquivos que o template compartilhado geraria diferente, mas cuja
 variante local deve ser preservada em `precisa sync`:
 
+- **`.github/workflows/ci.yml`** — o job `release` passa
+  `require_package_changes: false` para o `_release.yml`. O guard de
+  paths do template só inspeciona `packages/**`, `templates/**` e
+  `package.json`; como o site vive em `site/` (saiu de `packages/site`
+  no PR #22), todo push é site-only e o guard pula a release. O
+  semantic-release já decide o bump pelo tipo do commit, então o guard
+  é redundante aqui. **Já foi removido uma vez** pelo sync do PR #52 e
+  travou as releases por cinco semanas — o CHANGELOG ficou na 1.7.6 com
+  quatro commits `fix:` acumulados.
 - **`tsconfig.json`** — adiciona `"lib": ["ES2022", "DOM"]` porque o
   site (Vite + React) precisa dos tipos DOM; o template (bibliotecas
   server-side) usa o default sem DOM.
