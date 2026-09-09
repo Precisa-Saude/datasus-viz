@@ -19,8 +19,8 @@
  *   pnpm -F @datasus-viz/site municipio-names
  */
 
-import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { allMunicipios } from '@precisa-saude/datasus-sdk';
@@ -40,6 +40,9 @@ function main(): void {
     names,
     source: 'IBGE via @precisa-saude/datasus-sdk (allMunicipios)',
   };
+  // `public/data/` pode não existir num clone limpo — os artefatos de
+  // dados são gerados, não versionados em toda branch.
+  mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, `${JSON.stringify(payload)}\n`, 'utf-8');
   process.stderr.write(`✓ ${OUT_PATH} — ${Object.keys(names).length} municípios\n`);
 }
