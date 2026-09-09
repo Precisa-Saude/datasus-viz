@@ -13,6 +13,7 @@
     "build:parquet-index": "tsx scripts/build-parquet-index.ts",
     "dev": "vite",
     "lint": "eslint src/ --max-warnings 0",
+    "municipio-names": "tsx scripts/extract-municipio-names.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

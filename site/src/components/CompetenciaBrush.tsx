@@ -20,10 +20,11 @@ export interface CompetenciaBrushProps {
    */
   onPreview: (range: CompetenciaRange) => void;
   /**
-   * Double-click fora da janela do brush (mas dentro do histograma)
-   * pede um reset do range pro default da página.
+   * Double-click no histograma colapsa a seleção para um único mês — o
+   * do ponto clicado. Recebe `null` quando não foi possível resolver a
+   * posição, e nesse caso o caller decide o fallback.
    */
-  onReset: () => void;
+  onReset: (competencia: null | string) => void;
 }
 
 /**
@@ -320,6 +321,24 @@ export function CompetenciaBrush({
     [fromIdx, toIdx, maxIdx, months, onCommit],
   );
 
+  // Double-click colapsa para o mês sob o cursor. Vale tanto fora
+  // quanto dentro da janela do brush: a janela fica numa camada acima
+  // do backdrop e captura os próprios eventos, então precisa do mesmo
+  // handler pra não criar uma zona morta no meio do histograma.
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const el = containerRef.current;
+      if (!el || barStep <= 0) {
+        onReset(null);
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const idx = xToIdx(e.clientX - rect.left);
+      onReset(months[idx] ?? null);
+    },
+    [barStep, xToIdx, months, onReset],
+  );
+
   const startX = idxToX(fromIdx) - barStep / 2;
   const endX = idxToX(toIdx) + barStep / 2;
   const windowW = Math.max(barStep, endX - startX);
@@ -355,14 +374,14 @@ export function CompetenciaBrush({
           width={width}
         >
           {/* Backdrop transparente: capta double-click fora da janela
-              do brush e dispara reset pro default. As barras logo
+              do brush e colapsa a seleção pro mês clicado. As barras logo
               acima usam `pointerEvents="none"`, então cliques sobre
               elas chegam aqui; a janela do brush e os handles ficam
               em camadas superiores e capturam os próprios eventos. */}
           <rect
             fill="transparent"
             height={HISTOGRAM_HEIGHT}
-            onDoubleClick={onReset}
+            onDoubleClick={handleDoubleClick}
             width={barAreaWidth}
             x={0}
             y={histogramTop}
@@ -397,6 +416,7 @@ export function CompetenciaBrush({
             fill="var(--primary)"
             fillOpacity={0.08}
             height={HISTOGRAM_HEIGHT}
+            onDoubleClick={handleDoubleClick}
             onPointerDown={(e) => startDrag('middle', e)}
             stroke="var(--primary)"
             strokeWidth={1}
