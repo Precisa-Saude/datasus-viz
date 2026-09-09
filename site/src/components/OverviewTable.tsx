@@ -90,7 +90,7 @@ export function OverviewTable(props: OverviewTableProps) {
           </div>
         ) : (
           <table className="w-full font-margem text-xs">
-            <thead className="bg-muted/50 text-muted-foreground sticky top-0 text-[10px] font-medium tracking-wide uppercase">
+            <thead className="text-muted-foreground sticky top-0 z-10 text-[10px] font-medium tracking-wide uppercase">
               <tr>
                 <SortHeader
                   active={sortKey === 'primary'}
@@ -164,7 +164,15 @@ function SortHeader({
 }) {
   const Icon = dir === 'asc' ? ChevronUp : ChevronDown;
   return (
-    <th className={cn('px-3 py-2', align === 'left' ? 'text-left' : 'text-right')}>
+    // Fundo opaco na própria célula: com `sticky`, `bg-muted/50` no
+    // <thead> deixava as linhas passarem por baixo enquanto rolavam, e
+    // background aplicado ao <thead> não pinta de forma confiável.
+    <th
+      className={cn(
+        'bg-muted border-border border-b px-3 py-2',
+        align === 'left' ? 'text-left' : 'text-right',
+      )}
+    >
       <button
         className={cn(
           'hover:text-foreground inline-flex items-center gap-1 transition-colors',
