@@ -66,7 +66,7 @@ export function flagsForMunicipio(
 
 /** Rótulo curto de cada detector, para o tooltip. */
 export const KIND_LABEL: Record<AnomalyKind, string> = {
-  concentration: 'concentração incomum do volume nacional',
+  concentration: 'concentração muito acima da proporção populacional',
   'per-capita': 'volume por habitante fora do padrão',
   'price-ratio': 'valor por exame fora do padrão',
   spike: 'pico atípico frente ao histórico do próprio município',

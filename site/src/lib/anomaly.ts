@@ -234,6 +234,12 @@ export function detectPerCapitaOutliers(
 
 export interface ConcentrationOptions {
   /**
+   * Quociente mínimo entre o share de volume e o share populacional.
+   * Default: 10 — o município precisa concentrar 10× mais do que sua
+   * população faria esperar.
+   */
+  minQuociente?: number;
+  /**
    * Volume total mínimo no par (LOINC, competência) — evita flag em
    * exames raros onde 10 exames já são 50%. Default: 500.
    */
@@ -243,21 +249,61 @@ export interface ConcentrationOptions {
 }
 
 /**
- * Concentração: a fração do par (LOINC, competência) que cada
- * município responde. Útil pra detectar centros de referência
- * absorvendo a maior parte de exames de uma região.
+ * População somada dos municípios presentes nos dados, por ano — o
+ * denominador do share populacional. Usa o mesmo conjunto de
+ * municípios que forma o denominador do share de volume, pra que os
+ * dois shares sejam comparáveis.
+ */
+function populacaoNacionalPorAno(rows: AnomalyRow[], pop: PopulationLookup): Map<number, number> {
+  const municipiosPorAno = new Map<number, Set<string>>();
+  for (const r of rows) {
+    const ano = Number(r.competencia.slice(0, 4));
+    if (!Number.isFinite(ano)) continue;
+    const set = municipiosPorAno.get(ano) ?? new Set<string>();
+    set.add(r.municipioCode);
+    municipiosPorAno.set(ano, set);
+  }
+  const total = new Map<number, number>();
+  for (const [ano, municipios] of municipiosPorAno) {
+    let soma = 0;
+    for (const codigo of municipios) soma += pop(codigo, ano) ?? 0;
+    total.set(ano, soma);
+  }
+  return total;
+}
+
+/**
+ * Concentração desproporcional: quanto o share de volume de um
+ * município num par (LOINC, competência) excede o share que sua
+ * população faria esperar.
+ *
+ * A versão anterior olhava só o share bruto (≥ 20%), o que media
+ * sobretudo tamanho: São Paulo capital tem 5,8% da população do país e
+ * um parque laboratorial proporcionalmente maior, então cruzava 20% por
+ * construção — sozinha respondia por 1.262 dos 1.969 hits (64%), com
+ * quociente mediano de apenas 4× a própria população. Careaçu-MG, com
+ * 0,003% da população e 39% do ferro nacional numa competência, dá
+ * ~12.000×. Sem normalizar, os dois entram na mesma lista e o ruído
+ * enterra o sinal.
+ *
+ * Municípios sem população conhecida são pulados: não dá pra calcular o
+ * quociente, e estimar seria inventar denominador. Hoje isso atinge 1
+ * hit em 1.969.
  */
 export function detectConcentration(
   rows: AnomalyRow[],
+  pop: PopulationLookup,
   options: ConcentrationOptions = {},
 ): AnomalyHit[] {
   const threshold = options.threshold ?? 0.2;
   const minTotal = options.minTotal ?? 500;
+  const minQuociente = options.minQuociente ?? 10;
   const totals = new Map<string, number>();
   for (const r of rows) {
     const k = `${r.loinc}::${r.competencia}`;
     totals.set(k, (totals.get(k) ?? 0) + r.volumeExames);
   }
+  const popNacional = populacaoNacionalPorAno(rows, pop);
   const hits: AnomalyHit[] = [];
   for (const r of rows) {
     const k = `${r.loinc}::${r.competencia}`;
@@ -265,12 +311,25 @@ export function detectConcentration(
     if (total < minTotal) continue;
     const share = r.volumeExames / total;
     if (share < threshold) continue;
+
+    const ano = Number(r.competencia.slice(0, 4));
+    if (!Number.isFinite(ano)) continue;
+    const populacao = pop(r.municipioCode, ano);
+    const nacional = popNacional.get(ano) ?? 0;
+    if (populacao === undefined || populacao <= 0 || nacional <= 0) continue;
+    const sharePopulacional = populacao / nacional;
+    const quociente = share / sharePopulacional;
+    if (quociente < minQuociente) continue;
+
     hits.push({
-      baseline: total,
+      baseline: minQuociente,
       competencia: r.competencia,
       details: {
         groupTotal: total,
+        populacao,
+        quociente,
         share,
+        sharePopulacional,
         valorAprovadoBRL: r.valorAprovadoBRL,
         volumeExames: r.volumeExames,
       },
@@ -278,8 +337,8 @@ export function detectConcentration(
       loinc: r.loinc,
       municipioCode: r.municipioCode,
       municipioNome: r.municipioNome,
-      observed: r.volumeExames,
-      score: share,
+      observed: quociente,
+      score: quociente,
       ufSigla: r.ufSigla,
     });
   }

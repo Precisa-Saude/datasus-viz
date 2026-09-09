@@ -33,7 +33,7 @@ describe('AnomalyBadge', () => {
 
     // Sem travessão: o exame vem logo depois de "em".
     expect(screen.getByRole('listitem')).toHaveTextContent(
-      'concentração incomum do volume nacional em Ferro',
+      'concentração muito acima da proporção populacional em Ferro',
     );
 
     fireEvent.mouseLeave(botao);
@@ -65,7 +65,7 @@ describe('AnomalyBadge', () => {
     fireEvent.mouseEnter(screen.getByRole('button', { name: /volume atípico/i }));
     const itens = screen.getAllByRole('listitem').map((li) => li.textContent);
     expect(itens).toEqual([
-      '•concentração incomum do volume nacional em Ferro',
+      '•concentração muito acima da proporção populacional em Ferro',
       '•pico atípico frente ao histórico do próprio município em Colesterol Total',
     ]);
   });
@@ -115,7 +115,7 @@ describe('AnomalyBadge', () => {
     const itens = screen.getAllByRole('listitem').map((li) => li.textContent);
     expect(itens).toEqual([
       '•pico atípico frente ao histórico do próprio município em 8 competências',
-      '•concentração incomum do volume nacional em 1 competência',
+      '•concentração muito acima da proporção populacional em 1 competência',
     ]);
     expect(screen.getByRole('tooltip')).not.toHaveTextContent('e mais');
   });

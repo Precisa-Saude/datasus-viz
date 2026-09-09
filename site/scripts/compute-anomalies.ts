@@ -117,12 +117,34 @@ function runQuery<T = Record<string, unknown>>(db: duckdb.Database, sql: string)
   });
 }
 
-async function loadAllRows(sourceUrl: string): Promise<AnomalyRow[]> {
+/**
+ * O prefixo `parquet-opt/` é versionado desde 2026-05-18 e o caminho
+ * sem versão responde 403 no bucket. Este script continuou montando a
+ * URL antiga e passou a falhar já na primeira UF — por isso os
+ * artefatos em `public/anomalies/` estavam congelados em 2026-05-13.
+ * A versão corrente vem do manifest, mesma fonte que o site usa.
+ */
+async function fetchParquetOptVersion(sourceUrl: string): Promise<string> {
+  const url = `${sourceUrl}/manifest/index.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Falha ao ler ${url} (${res.status}).`);
+  const manifest = (await res.json()) as { parquetOptVersion?: string };
+  const versao = manifest.parquetOptVersion;
+  if (!versao) {
+    throw new Error(
+      `Manifest em ${url} não declara \`parquetOptVersion\` — sem ela não há URL válida ` +
+        'para o parquet-opt (o prefixo sem versão foi aposentado).',
+    );
+  }
+  return versao;
+}
+
+async function loadAllRows(sourceUrl: string, parquetOptVersion: string): Promise<AnomalyRow[]> {
   const db = new duckdb.Database(':memory:');
   await runQuery(db, 'LOAD httpfs;');
   const all: AnomalyRow[] = [];
   for (const uf of ALL_UFS) {
-    const url = `${sourceUrl}/parquet-opt/uf=${uf}/part.parquet`;
+    const url = `${sourceUrl}/parquet-opt/${parquetOptVersion}/uf=${uf}/part.parquet`;
     process.stderr.write(`  · ${uf} `);
     const t0 = Date.now();
     const rows = await runQuery<AnomalyRow>(
@@ -201,23 +223,25 @@ async function main(): Promise<void> {
   const sourceUrl = process.env['DATA_SOURCE_URL'] ?? DEFAULT_SOURCE_URL;
   const outDir = resolve(siteRoot, 'public/anomalies');
 
-  process.stderr.write(`Lendo parquet-opt de ${sourceUrl} (27 UFs)...\n`);
+  const parquetOptVersion = await fetchParquetOptVersion(sourceUrl);
+  process.stderr.write(`Lendo parquet-opt ${parquetOptVersion} de ${sourceUrl} (27 UFs)...\n`);
   const t0 = Date.now();
-  const rows = await loadAllRows(sourceUrl);
+  const rows = await loadAllRows(sourceUrl, parquetOptVersion);
   process.stderr.write(
     `Total: ${rows.length.toLocaleString('pt-BR')} linhas em ${((Date.now() - t0) / 1000).toFixed(1)}s\n\n`,
   );
 
   process.stderr.write('Computando detectores...\n');
   const tD = Date.now();
-  const spikeAll = detectTemporalSpikes(rows);
-  const concentrationAll = detectConcentration(rows);
-  const priceRatioAll = detectPriceRatioOutliers(rows);
-
-  // Per-capita exige a base IBGE — lê o JSON já committed.
+  // Per-capita e concentração exigem a base IBGE — lê o JSON já
+  // committed antes de rodar os detectores.
   const popPath = resolve(siteRoot, 'public/data/populacao.json');
   const popData = JSON.parse(readFileSync(popPath, 'utf-8')) as PopulationData;
   const pop = buildPopulationLookup(popData);
+
+  const spikeAll = detectTemporalSpikes(rows);
+  const concentrationAll = detectConcentration(rows, pop);
+  const priceRatioAll = detectPriceRatioOutliers(rows);
   const perCapitaAll = detectPerCapitaOutliers(rows, pop);
   process.stderr.write(`Detectores rodaram em ${((Date.now() - tD) / 1000).toFixed(1)}s\n`);
   process.stderr.write(

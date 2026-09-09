@@ -51,7 +51,7 @@ const DETECTOR_LABELS: Record<AnomalyKind, string> = {
 };
 
 const DETECTOR_AXIS_LABELS: Record<AnomalyKind, string> = {
-  concentration: 'Share do total LOINC × competência (município)',
+  concentration: 'Concentração ÷ proporção populacional (×)',
   'per-capita': 'Exames por 1k habitantes',
   'price-ratio': 'BRL por exame',
   spike: 'Volume de exames no mês',
@@ -68,10 +68,7 @@ async function loadManifest(): Promise<AggregateIndex> {
 }
 
 const NF_INT = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
-const NF_PCT = new Intl.NumberFormat('pt-BR', {
-  maximumFractionDigits: 1,
-  style: 'percent',
-});
+const NF_MULT = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 const NF_BRL = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
   maximumFractionDigits: 0,
@@ -79,7 +76,10 @@ const NF_BRL = new Intl.NumberFormat('pt-BR', {
 });
 
 function formatValueForKind(kind: AnomalyKind): (v: number) => string {
-  if (kind === 'concentration') return (v: number) => NF_PCT.format(v);
+  // O score da concentração deixou de ser share (0–1) e passou a ser o
+  // quociente entre o share de volume e o share populacional — formatar
+  // como percentual mostraria "1.224.100%" onde cabe "12.241×".
+  if (kind === 'concentration') return (v: number) => `${NF_MULT.format(v)}×`;
   if (kind === 'price-ratio') return (v: number) => NF_BRL.format(v);
   return (v: number) => NF_INT.format(v);
 }

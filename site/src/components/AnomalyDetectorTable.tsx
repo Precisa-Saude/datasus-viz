@@ -30,7 +30,7 @@ const KIND_COLORS: Record<AnomalyKind, string> = {
 };
 
 const BASELINE_LABELS: Record<AnomalyKind, string> = {
-  concentration: 'limite de concentração',
+  concentration: 'limite (× a proporção populacional)',
   'per-capita': 'baseline (mín. por 1k hab.)',
   'price-ratio': 'mediana nacional',
   spike: 'baseline (mediana)',
