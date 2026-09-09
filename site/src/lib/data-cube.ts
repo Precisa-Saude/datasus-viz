@@ -72,6 +72,19 @@ export interface BinTotals {
  * O custo é `O(numBins)` operações Float64 — para 27 UFs, ~54 FLOPs
  * por chamada, sub-milissegundo mesmo a 60fps.
  */
+/**
+ * Códigos de 6 dígitos dos municípios presentes no cubo — isto é, que
+ * faturaram análise em alguma competência da série, não só na faixa
+ * selecionada (o SQL do cubo não filtra por faixa).
+ *
+ * Serve para o mapa separar "não faturou neste mês" de "nunca faturou":
+ * município sem laboratório próprio nunca entra no agregado, porque o
+ * SIA contabiliza a análise no estabelecimento executor.
+ */
+export function municipioKeys6(cube: DataCube | null): Set<string> {
+  return new Set((cube?.bins ?? []).map((b) => b.slice(0, 6)));
+}
+
 export function lookupRange(
   cube: DataCube,
   range: CompetenciaRange,

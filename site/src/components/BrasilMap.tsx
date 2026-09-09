@@ -19,7 +19,7 @@ import {
 import { BASEMAP_STYLE, BRAZIL_BOUNDS, BRAZIL_FIT_PADDING, BRAZIL_MAX_BOUNDS } from '@/lib/mapbox';
 import { loadMunicipioNames, resolveMunicipioName } from '@/lib/municipios';
 import { ensurePmtilesProtocol } from '@/lib/pmtiles-protocol';
-import { buildOverviewTooltipHtml } from '@/lib/tooltip';
+import { buildOverviewTooltipHtml, municipioSubtitle } from '@/lib/tooltip';
 
 import { MapLegend } from './MapLegend';
 
@@ -33,6 +33,9 @@ export interface BrasilMapProps {
   availableUFs: readonly string[];
   /** Quando setado, pede que o mapa centralize/zoom no município (codarea). */
   focusMunCodigo: null | string;
+  /** Municípios (código 6 díg.) com exame em alguma competência da
+   *  série — ver `municipioSubtitle` em `lib/tooltip`. */
+  municipiosComSerie: ReadonlySet<string>;
   /** Totais municipais da UF ativa, agregados sobre a faixa via cubo. */
   municipioTotals: Map<string, BinTotals> | null;
   /** Contador que, ao mudar, pede fit aos bounds da UF atual. */
@@ -113,21 +116,16 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
     const featureUf = String(feature.properties?.uf ?? '');
     if (featureUf !== latest.selectedUf) return;
     const codareaStr = String(feature.properties?.codarea ?? feature.id ?? '');
-    const featId = feature.id ?? codareaStr;
+    const key6 = codareaStr.slice(0, 6);
     const state = map.getFeatureState({
-      id: featId,
+      id: feature.id ?? codareaStr,
       source: SOURCE_ID,
       sourceLayer: MUN_LAYER,
-    }) as {
-      municipio?: string;
-      rank?: number;
-      rankTotal?: number;
-      volume?: number;
-    } | null;
+    }) as { municipio?: string; rank?: number; rankTotal?: number; volume?: number } | null;
     const name = resolveMunicipioName(
       state?.municipio,
       refs.municipioNames.current,
-      codareaStr.slice(0, 6),
+      key6,
       `código ${codareaStr}`,
     );
     const hasData = Number(state?.volume ?? 0) > 0;
@@ -139,9 +137,7 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
           name: `${name} — ${featureUf}`,
           rank: state?.rank,
           rankTotal: state?.rankTotal,
-          subtitle: hasData
-            ? 'Clique para ver todos os exames'
-            : 'Sem exames faturados nesta competência',
+          subtitle: municipioSubtitle(hasData, latest.municipiosComSerie.has(key6)),
           totalLabel: 'exames laboratoriais',
           totalValue: Number(state?.volume ?? 0),
         }),
