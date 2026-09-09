@@ -20,9 +20,9 @@ export interface CompetenciaBrushProps {
    */
   onPreview: (range: CompetenciaRange) => void;
   /**
-   * Double-click no histograma colapsa a seleção para um único mês — o
-   * do ponto clicado. Recebe `null` quando não foi possível resolver a
-   * posição, e nesse caso o caller decide o fallback.
+   * Double-click no histograma. Recebe a competência sob o cursor — o
+   * caller decide que janela abrir a partir dela — ou `null` quando não
+   * foi possível resolver a posição.
    */
   onReset: (competencia: null | string) => void;
 }
@@ -321,7 +321,7 @@ export function CompetenciaBrush({
     [fromIdx, toIdx, maxIdx, months, onCommit],
   );
 
-  // Double-click colapsa para o mês sob o cursor. Vale tanto fora
+  // Double-click reporta o mês sob o cursor. Vale tanto fora
   // quanto dentro da janela do brush: a janela fica numa camada acima
   // do backdrop e captura os próprios eventos, então precisa do mesmo
   // handler pra não criar uma zona morta no meio do histograma.
@@ -374,7 +374,7 @@ export function CompetenciaBrush({
           width={width}
         >
           {/* Backdrop transparente: capta double-click fora da janela
-              do brush e colapsa a seleção pro mês clicado. As barras logo
+              do brush e reporta o mês clicado. As barras logo
               acima usam `pointerEvents="none"`, então cliques sobre
               elas chegam aqui; a janela do brush e os handles ficam
               em camadas superiores e capturam os próprios eventos. */}
