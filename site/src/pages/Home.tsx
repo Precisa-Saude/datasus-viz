@@ -8,6 +8,7 @@ import { MunicipioDetail } from '@/components/MunicipioDetail';
 import type { OverviewRow } from '@/components/OverviewTable';
 import { OverviewTable } from '@/components/OverviewTable';
 import type { AggregateIndex, CompetenciaRange, MunicipioAggregate } from '@/lib/aggregates';
+import { municipioKeys6 } from '@/lib/data-cube';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
 import { formatCompetenciaRange } from '@/lib/format';
 import { fetchMunicipioDetail, fetchVolumeByCompetencia } from '@/lib/queries';
@@ -151,6 +152,8 @@ export default function Home() {
     effectiveRange,
     handleCubeError,
   );
+
+  const municipiosComSerie = useMemo(() => municipioKeys6(municipioCube), [municipioCube]);
 
   // Detalhe LOINC×mês de UM município: pequeno o suficiente pra carregar
   // todos os meses de uma vez e filtrar client-side via previewRange.
@@ -324,6 +327,7 @@ export default function Home() {
           <BrasilMap
             availableUFs={manifest.availableUFs}
             focusMunCodigo={selectedMun?.codigo ?? null}
+            municipiosComSerie={municipiosComSerie}
             municipioTotals={municipioTotals}
             onMunicipioClick={handleMunicipioClick}
             onUfClick={handleUfClick}
