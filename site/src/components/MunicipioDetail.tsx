@@ -1,10 +1,15 @@
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { CompetenciaRange, MunicipioAggregate } from '@/lib/aggregates';
+import type { AnomalyFlagIndex } from '@/lib/anomaly-flags';
+import { flagsForMunicipio } from '@/lib/anomaly-flags';
 import { formatCompetenciaRange } from '@/lib/format';
+import { fetchAnomalyFlags } from '@/lib/queries';
 import { formatBRL, formatInt } from '@/lib/tooltip';
 import { cn } from '@/lib/utils';
+
+import { AnomalyBadge } from './AnomalyBadge';
 
 export interface MunicipioDetailProps {
   biomarkersByLoinc: Record<string, string>;
@@ -39,6 +44,29 @@ const DEFAULT_DIR: Record<SortKey, SortDir> = {
 export function MunicipioDetail(props: MunicipioDetailProps) {
   const [sortKey, setSortKey] = useState<SortKey>('volume');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [flagIndex, setFlagIndex] = useState<AnomalyFlagIndex | null>(null);
+
+  // Índice de anomalias é acessório: se falhar, o painel segue igual,
+  // só sem o alerta. Por isso não vai pro estado de erro da página.
+  useEffect(() => {
+    let cancelled = false;
+    fetchAnomalyFlags().then(
+      (payload) => {
+        if (!cancelled) setFlagIndex(payload.flags);
+      },
+      // eslint-disable-next-line no-console
+      (e: unknown) => console.warn('[fetchAnomalyFlags]', e),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const anomalyFlags = useMemo(
+    () =>
+      flagIndex ? flagsForMunicipio(flagIndex, props.municipio.codigo, props.competenciaRange) : [],
+    [flagIndex, props.municipio.codigo, props.competenciaRange],
+  );
 
   const rows = useMemo<Row[]>(() => {
     const key6 = props.municipio.codigo.slice(0, 6);
@@ -91,11 +119,14 @@ export function MunicipioDetail(props: MunicipioDetailProps) {
     <aside className="border-border bg-card/98 pointer-events-auto flex h-full w-full flex-col overflow-hidden rounded-lg border shadow-lg backdrop-blur-md">
       <header className="border-border flex items-start justify-between gap-2 border-b p-4">
         <div>
-          <h2 className="font-margem text-base font-semibold tracking-tight">
-            {props.municipio.nome}
-            <span className="text-muted-foreground ml-1 font-normal">
-              — {props.municipio.ufSigla}
+          <h2 className="flex items-center gap-1.5 font-margem text-base font-semibold tracking-tight">
+            <span>
+              {props.municipio.nome}
+              <span className="text-muted-foreground ml-1 font-normal">
+                — {props.municipio.ufSigla}
+              </span>
             </span>
+            <AnomalyBadge biomarkersByLoinc={props.biomarkersByLoinc} flags={anomalyFlags} />
           </h2>
           <p className="text-muted-foreground mt-1 font-margem text-xs">
             Exames laboratoriais em {formatCompetenciaRange(props.competenciaRange)} ·{' '}

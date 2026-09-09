@@ -34,6 +34,8 @@ import {
   detectPriceRatioOutliers,
   detectTemporalSpikes,
 } from '../src/lib/anomaly.ts';
+import type { AnomalyFlagsPayload } from '../src/lib/anomaly-flags.ts';
+import { buildAnomalyFlagIndex } from '../src/lib/anomaly-flags.ts';
 
 const DEFAULT_SOURCE_URL = 'https://dfdu08vi8wsus.cloudfront.net';
 
@@ -176,6 +178,17 @@ function writeOutput(outPath: string, kind: string, hits: AnomalyHit[], topN: nu
   );
 }
 
+function writeFlagsIndex(outPath: string, byKind: Record<string, AnomalyHit[]>): void {
+  const payload: AnomalyFlagsPayload = {
+    flags: buildAnomalyFlagIndex(byKind),
+    generatedAt: new Date().toISOString(),
+  };
+  writeFileSync(outPath, `${JSON.stringify(payload)}\n`, 'utf-8');
+  process.stderr.write(
+    `  ✓ ${outPath} (${Object.keys(payload.flags).length} municípios, ${formatBytes(outPath)})\n`,
+  );
+}
+
 function formatBytes(path: string): string {
   const bytes = readFileSync(path).byteLength;
   if (bytes < 1024) return `${bytes} B`;
@@ -219,6 +232,16 @@ async function main(): Promise<void> {
   writeOutput(resolve(outDir, 'concentration.json'), 'concentration', concentrationAll, TOP_N_HITS);
   writeOutput(resolve(outDir, 'price-ratio.json'), 'price-ratio', priceRatioAll, TOP_N_HITS);
   writeOutput(resolve(outDir, 'per-capita.json'), 'per-capita', perCapitaAll, TOP_N_HITS);
+
+  // Índice compacto consumido pelo painel de detalhe. Regerado aqui pra
+  // não ficar defasado em relação aos quatro artefatos acima — os hits
+  // truncados no top-N são exatamente os que a UI sinaliza.
+  writeFlagsIndex(resolve(outDir, 'flags.json'), {
+    concentration: concentrationAll.slice(0, TOP_N_HITS),
+    'per-capita': perCapitaAll.slice(0, TOP_N_HITS),
+    'price-ratio': priceRatioAll.slice(0, TOP_N_HITS),
+    spike: spikeAll.slice(0, TOP_N_HITS),
+  });
 
   process.stderr.write(`\n✓ Tudo em ${outDir}\n`);
 }

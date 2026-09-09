@@ -74,3 +74,11 @@ export function rawSiaPaUrl(ano: number, ufSigla: string, mes: number): string {
 export function anomaliesUrl(kind: string): string {
   return `/anomalies/${kind}.json`;
 }
+
+// Índice compacto (município × competência → detectores) derivado dos
+// quatro artefatos acima pelo `build-anomaly-flags.ts`. Existe porque os
+// artefatos completos somam ~7,5 MB — caro só pra decidir se um ícone
+// de alerta aparece no painel de detalhe.
+export function anomalyFlagsUrl(): string {
+  return '/anomalies/flags.json';
+}
