@@ -1,3 +1,9 @@
+## [1.11.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.10.0...v1.11.0) (2026-09-09)
+
+### Features
+
+* **site:** double-click no histograma abre o ano-calendário clicado ([#64](https://github.com/Precisa-Saude/datasus-viz/issues/64)) ([2749daf](https://github.com/Precisa-Saude/datasus-viz/commit/2749daf5426dd6226ffcf4abeeced82faa92a113))
+
 ## [1.10.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.9.0...v1.10.0) (2026-09-09)
 
 ### Features
