@@ -17,6 +17,7 @@ import {
   UF_LAYER,
 } from '@/lib/map-layers';
 import { BASEMAP_STYLE, BRAZIL_BOUNDS, BRAZIL_FIT_PADDING, BRAZIL_MAX_BOUNDS } from '@/lib/mapbox';
+import { loadMunicipioNames, resolveMunicipioName } from '@/lib/municipios';
 import { ensurePmtilesProtocol } from '@/lib/pmtiles-protocol';
 import { buildOverviewTooltipHtml } from '@/lib/tooltip';
 
@@ -47,6 +48,8 @@ export interface BrasilMapProps {
 
 interface LayerRefs {
   latestProps: React.MutableRefObject<BrasilMapProps | null>;
+  /** `codarea[0..6]` → nome. Vazio até o JSON de municípios carregar. */
+  municipioNames: React.MutableRefObject<Record<string, string>>;
   popup: React.MutableRefObject<maplibregl.Popup | null>;
 }
 
@@ -121,7 +124,12 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
       rankTotal?: number;
       volume?: number;
     } | null;
-    const name = state?.municipio ?? String(feature.properties?.nome ?? `código ${codareaStr}`);
+    const name = resolveMunicipioName(
+      state?.municipio,
+      refs.municipioNames.current,
+      codareaStr.slice(0, 6),
+      `código ${codareaStr}`,
+    );
     const hasData = Number(state?.volume ?? 0) > 0;
     map.getCanvas().style.cursor = hasData ? 'pointer' : 'default';
     popup
@@ -162,7 +170,12 @@ function attachHandlers(map: maplibregl.Map, refs: LayerRefs): void {
     map.easeTo({ center: e.lngLat, duration: 600, zoom: Math.max(map.getZoom(), 10) });
     latest.onMunicipioClick({
       codigo: codareaStr,
-      nome: state?.municipio ?? String(feature.properties?.nome ?? codareaStr),
+      nome: resolveMunicipioName(
+        state?.municipio,
+        refs.municipioNames.current,
+        codareaStr.slice(0, 6),
+        codareaStr,
+      ),
       ufSigla: featureUf,
     });
   });
@@ -184,6 +197,7 @@ export function BrasilMap(props: BrasilMapProps) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const loadedRef = useRef(false);
+  const municipioNamesRef = useRef<Record<string, string>>({});
   const ufBoundsRef = useRef<Map<string, maplibregl.LngLatBounds>>(new Map());
   const latestPropsRef = useRef<BrasilMapProps | null>(null);
   latestPropsRef.current = props;
@@ -212,7 +226,11 @@ export function BrasilMap(props: BrasilMapProps) {
     map.once('load', () => {
       loadedRef.current = true;
       addMapLayers(map);
-      attachHandlers(map, { latestProps: latestPropsRef, popup: popupRef });
+      attachHandlers(map, {
+        latestProps: latestPropsRef,
+        municipioNames: municipioNamesRef,
+        popup: popupRef,
+      });
     });
     return () => {
       map.remove();
@@ -248,6 +266,24 @@ export function BrasilMap(props: BrasilMapProps) {
     };
     if (loadedRef.current) apply();
     else map.once('load', apply);
+  }, [props.selectedUf]);
+
+  // Tabela de nomes: só faz sentido no drill-down, então carrega quando
+  // uma UF é selecionada. Memoizada no módulo — trocar de UF não refaz o
+  // fetch. Falha é não-fatal: o mapa volta a mostrar o código cru.
+  useEffect(() => {
+    if (!props.selectedUf) return;
+    let cancelled = false;
+    loadMunicipioNames().then(
+      (names) => {
+        if (!cancelled) municipioNamesRef.current = names;
+      },
+      // eslint-disable-next-line no-console
+      (e: unknown) => console.warn('[loadMunicipioNames]', e),
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [props.selectedUf]);
 
   // Refit pedido explicitamente (ex.: fechar painel de município).
