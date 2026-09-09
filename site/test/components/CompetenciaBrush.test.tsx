@@ -119,4 +119,58 @@ describe('CompetenciaBrush', () => {
     fireEvent.doubleClick(backdrop!);
     expect(onReset).toHaveBeenCalledTimes(1);
   });
+
+  describe('double-click', () => {
+    // jsdom não faz layout: getBoundingClientRect devolve zeros e o
+    // ResizeObserver nunca dispara, então o brush fica na largura
+    // default (640) e `xToIdx` é determinístico a partir do clientX.
+    function renderBrush(onReset: (c: null | string) => void) {
+      const { container } = render(
+        <CompetenciaBrush
+          competencias={COMPETENCIAS}
+          onCommit={vi.fn()}
+          onPreview={vi.fn()}
+          onReset={onReset}
+          value={{ from: '2023-01', to: '2024-12' }}
+          volumeByCompetencia={makeVolume()}
+        />,
+      );
+      return container.querySelector('svg') as SVGSVGElement;
+    }
+
+    it('colapsa na competência sob o cursor', () => {
+      const onReset = vi.fn();
+      const svg = renderBrush(onReset);
+      const backdrop = svg.querySelector('rect') as SVGRectElement;
+      // 640px / 5 competências = 128px por barra; x=320 cai na 3ª.
+      fireEvent.doubleClick(backdrop, { clientX: 320 });
+      expect(onReset).toHaveBeenCalledWith('2024-01');
+    });
+
+    it('resolve a primeira competência no início do histograma', () => {
+      const onReset = vi.fn();
+      const svg = renderBrush(onReset);
+      fireEvent.doubleClick(svg.querySelector('rect') as SVGRectElement, { clientX: 0 });
+      expect(onReset).toHaveBeenCalledWith('2023-01');
+    });
+
+    it('resolve a última competência no fim do histograma', () => {
+      const onReset = vi.fn();
+      const svg = renderBrush(onReset);
+      fireEvent.doubleClick(svg.querySelector('rect') as SVGRectElement, { clientX: 640 });
+      expect(onReset).toHaveBeenCalledWith('2024-12');
+    });
+
+    it('também dispara dentro da janela do brush, não só fora', () => {
+      // A janela fica numa camada acima do backdrop; sem o handler nela
+      // o meio do histograma viraria uma zona morta.
+      const onReset = vi.fn();
+      const svg = renderBrush(onReset);
+      const janela = [...svg.querySelectorAll('rect')].find(
+        (r) => r.getAttribute('stroke') === 'var(--primary)',
+      ) as SVGRectElement;
+      fireEvent.doubleClick(janela, { clientX: 320 });
+      expect(onReset).toHaveBeenCalledWith('2024-01');
+    });
+  });
 });

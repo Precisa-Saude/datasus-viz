@@ -132,6 +132,18 @@ export default function Home() {
 
   const selectedUf = ufSiglaParam;
 
+  // Double-click no histograma colapsa a faixa no mês clicado. Sem
+  // posição resolvível, cai no mês mais recente do manifest — que é
+  // sempre um alvo útil, ao contrário do range default.
+  const handleBrushReset = useCallback(
+    (competencia: null | string) => {
+      const alvo = competencia ?? manifest?.competencias.at(-1) ?? null;
+      if (alvo) commitRange({ from: alvo, to: alvo });
+      else resetRange();
+    },
+    [manifest, commitRange, resetRange],
+  );
+
   const handleCubeError = useCallback((m: string) => setError(m), []);
   const { municipioCube, municipioTotals, ufCube, ufTotals } = useDataCubes(
     manifest?.competencias,
@@ -363,7 +375,7 @@ export default function Home() {
             competencias={manifest.competencias}
             onCommit={commitRange}
             onPreview={setPreviewRange}
-            onReset={resetRange}
+            onReset={handleBrushReset}
             value={competenciaRange}
             volumeByCompetencia={volumeByCompetencia}
           />
