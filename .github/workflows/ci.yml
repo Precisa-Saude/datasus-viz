@@ -76,11 +76,27 @@ jobs:
       pr_number: ${{ fromJSON(github.event.pull_request.number || inputs.pr_number || 0) }}
     secrets: inherit
 
-  # ── Release (main only, guarded on package changes) ────────────
+  # ── Release (main only) ────────────────────────────────────────
   release:
     needs: checks
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     uses: ./.github/workflows/_release.yml
+    with:
+      # DIVERGÊNCIA DELIBERADA DO TEMPLATE — não remover num `precisa sync`.
+      # Ver "Divergências justificadas do template" em AGENTS.md.
+      #
+      # O guard de paths em _release.yml só inspeciona `packages/**`,
+      # `templates/**` e `package.json`. Depois que o site saiu de
+      # `packages/site` pra `site/` (PR #22, v1.3.2), todo push virou
+      # site-only e passou a pular o release. semantic-release já decide
+      # sozinho se os commits merecem bump (`chore`/`ci`/`docs` não
+      # bumpam), então o guard de paths é redundante aqui — e bloqueante.
+      #
+      # Este override já existiu (PR #36) e foi removido sem querer pelo
+      # sync de templates do PR #52. Resultado: nenhuma release entre
+      # 2026-08-03 e 2026-09-09, com quatro commits `fix:` acumulados e
+      # o CHANGELOG parado na 1.7.6.
+      require_package_changes: false
     secrets: inherit
 
   # ── Publish to npm (when release created a new version) ────────
