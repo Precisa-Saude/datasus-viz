@@ -1,3 +1,9 @@
+## [1.13.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.12.1...v1.13.0) (2026-09-09)
+
+### Features
+
+* **site:** busca de município por nome ([#67](https://github.com/Precisa-Saude/datasus-viz/issues/67)) ([bec7854](https://github.com/Precisa-Saude/datasus-viz/commit/bec785462cff17a408251cf82d6feccd45e7fbea))
+
 ## [1.12.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.12.0...v1.12.1) (2026-09-09)
 
 ### Bug Fixes
