@@ -5,12 +5,14 @@ import type { SelectedMunicipio } from '@/components/BrasilMap';
 import { BrasilMap } from '@/components/BrasilMap';
 import { CompetenciaBrush } from '@/components/CompetenciaBrush';
 import { MunicipioDetail } from '@/components/MunicipioDetail';
+import { MunicipioSearch } from '@/components/MunicipioSearch';
 import type { OverviewRow } from '@/components/OverviewTable';
 import { OverviewTable } from '@/components/OverviewTable';
 import type { AggregateIndex, CompetenciaRange, MunicipioAggregate } from '@/lib/aggregates';
 import { municipioKeys6 } from '@/lib/data-cube';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
 import { formatCompetenciaRange } from '@/lib/format';
+import { DETAIL_STYLE, PANEL_STYLE, SEARCH_STYLE } from '@/lib/home-layout';
 import { fetchMunicipioDetail, fetchVolumeByCompetencia } from '@/lib/queries';
 import { brushDoubleClickRange, useCompetenciaRange } from '@/lib/use-competencia-range';
 import { useDataCubes } from '@/lib/use-data-cubes';
@@ -78,20 +80,6 @@ export default function Home() {
   useEffect(() => {
     setPreviewRange(null);
   }, [competenciaRange?.from, competenciaRange?.to]);
-
-  // Offset = altura do header (h-16 = 4rem) + respiro de 1.5rem.
-  const PANEL_TOP = 'calc(4rem + 1.5rem)';
-  const panelStyle = {
-    left: 'max((100vw - var(--grid-max-w)) / 2, 1rem)',
-    top: PANEL_TOP,
-    width: 'calc(var(--col-w) * 3 + 2rem)',
-  } as const;
-  const detailStyle = {
-    height: 'calc((100vh - 7rem) / 2)',
-    right: 'max((100vw - var(--grid-max-w)) / 2, 1rem)',
-    top: PANEL_TOP,
-    width: 'calc(var(--col-w) * 4 + 3rem)',
-  } as const;
 
   const biomarkersByLoinc = useMemo<Record<string, string>>(
     () =>
@@ -343,10 +331,19 @@ export default function Home() {
         ) : null}
       </div>
 
+      {manifest ? (
+        <div
+          className="pointer-events-auto absolute left-1/2 z-20 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2"
+          style={SEARCH_STYLE}
+        >
+          <MunicipioSearch onSelect={handleMunicipioClick} />
+        </div>
+      ) : null}
+
       {manifest && effectiveRange !== null ? (
         <aside
           className="border-border bg-card/95 pointer-events-auto absolute z-10 space-y-2 overflow-auto rounded-lg border p-4 shadow-lg backdrop-blur-md"
-          style={panelStyle}
+          style={PANEL_STYLE}
         >
           <h1 className="font-margem text-base font-semibold tracking-tight">
             Biomarcadores do SUS por região
@@ -387,7 +384,7 @@ export default function Home() {
       ) : null}
 
       {tablePanel ? (
-        <div className="absolute z-10" style={detailStyle}>
+        <div className="absolute z-10" style={DETAIL_STYLE}>
           {tablePanel}
         </div>
       ) : null}
