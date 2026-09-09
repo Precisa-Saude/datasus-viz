@@ -1,7 +1,6 @@
 import { TriangleAlert } from 'lucide-react';
-import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import type { AnomalyKind } from '@/lib/anomaly';
 import { KIND_LABEL, type ResolvedFlag } from '@/lib/anomaly-flags';
 import { formatCompetencia } from '@/lib/format';
@@ -72,41 +71,7 @@ function itensAgregados(flags: ResolvedFlag[]): string[] {
  * Não afirma erro nem irregularidade — a origem da divergência não é
  * observável a partir do dado agregado.
  */
-const TOOLTIP_WIDTH = 288;
-const VIEWPORT_MARGIN = 8;
-
 export function AnomalyBadge({ biomarkersByLoinc, flags }: AnomalyBadgeProps) {
-  const [aberto, setAberto] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
-  const botaoRef = useRef<HTMLButtonElement | null>(null);
-  const tooltipId = useId();
-
-  // O painel de detalhe é `overflow: hidden` e tem ~354 px de largura,
-  // dos quais sobram ~230 à direita do ícone — um tooltip de 288 px
-  // ancorado no ícone era cortado na borda. Portal no `body` + posição
-  // fixa calculada a partir do rect do botão tira o tooltip de dentro
-  // do painel e o mantém dentro da viewport.
-  const posicionar = useCallback(() => {
-    const rect = botaoRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const maxLeft = window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN;
-    setPos({
-      left: Math.max(VIEWPORT_MARGIN, Math.min(rect.left, maxLeft)),
-      top: rect.bottom + 6,
-    });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!aberto) return;
-    posicionar();
-    window.addEventListener('scroll', posicionar, true);
-    window.addEventListener('resize', posicionar);
-    return () => {
-      window.removeEventListener('scroll', posicionar, true);
-      window.removeEventListener('resize', posicionar);
-    };
-  }, [aberto, posicionar]);
-
   if (flags.length === 0) return null;
 
   const competencias = [...new Set(flags.map((f) => f.competencia))];
@@ -116,57 +81,31 @@ export function AnomalyBadge({ biomarkersByLoinc, flags }: AnomalyBadgeProps) {
   const itens = agregado ? itensAgregados(flags) : detalhados;
 
   return (
-    <span className="relative inline-flex align-middle">
-      <button
-        aria-describedby={aberto ? tooltipId : undefined}
-        aria-label="Volume atípico detectado nesta competência"
-        className="text-amber-600 hover:text-amber-700 focus-visible:ring-ring inline-flex cursor-help items-center rounded-sm focus-visible:ring-2 focus-visible:outline-none dark:text-amber-500"
-        onBlur={() => setAberto(false)}
-        onFocus={() => setAberto(true)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') setAberto(false);
-        }}
-        onMouseEnter={() => setAberto(true)}
-        onMouseLeave={() => setAberto(false)}
-        ref={botaoRef}
-        type="button"
-      >
-        <TriangleAlert aria-hidden="true" size={15} strokeWidth={2.25} />
-      </button>
-
-      {aberto &&
-        createPortal(
-          <div
-            className="border-border bg-card text-card-foreground fixed z-50 rounded-md border p-2.5 text-left font-sans text-xs leading-snug font-normal shadow-lg"
-            id={tooltipId}
-            role="tooltip"
-            style={{ left: pos.left, top: pos.top, width: TOOLTIP_WIDTH }}
-          >
-            <p className="text-foreground font-semibold">Volume atípico</p>
-            <p className="text-muted-foreground mt-1">
-              {umaCompetencia
-                ? `Em ${formatCompetencia(competencias[0] as string)}, este município destoa do padrão em:`
-                : 'Neste município, dentro da faixa selecionada, destoam do padrão:'}
-            </p>
-            <ul className="text-muted-foreground mt-1 space-y-0.5">
-              {itens.map((item) => (
-                <li className="flex gap-1.5" key={item}>
-                  <span aria-hidden="true" className="text-muted-foreground/60">
-                    •
-                  </span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            {/* Ressalva de leitura, não conteúdo principal — meio ponto
-                menor que a lista, pra não competir com ela. */}
-            <p className="text-muted-foreground/85 mt-2 text-[10px] leading-snug">
-              Os valores são exibidos exatamente como o DATASUS os publicou. A marcação vem dos
-              detectores do próprio site e indica divergência estatística, não erro confirmado.
-            </p>
-          </div>,
-          document.body,
-        )}
-    </span>
+    <InfoTooltip
+      ariaLabel="Volume atípico detectado nesta competência"
+      className="text-amber-600 hover:text-amber-700 dark:text-amber-500"
+      trigger={<TriangleAlert aria-hidden="true" size={15} strokeWidth={2.25} />}
+    >
+      <p className="text-foreground font-semibold">Volume atípico</p>
+      <p className="text-muted-foreground mt-1">
+        {umaCompetencia
+          ? `Em ${formatCompetencia(competencias[0] as string)}, este município destoa do padrão em:`
+          : 'Neste município, dentro da faixa selecionada, destoam do padrão:'}
+      </p>
+      <ul className="text-muted-foreground mt-1 space-y-0.5">
+        {itens.map((item) => (
+          <li className="flex gap-1.5" key={item}>
+            <span aria-hidden="true" className="text-muted-foreground/60">
+              •
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground/85 mt-2 text-[10px] leading-snug">
+        Os valores são exibidos exatamente como o DATASUS os publicou. A marcação vem dos detectores
+        do próprio site e indica divergência estatística, não erro confirmado.
+      </p>
+    </InfoTooltip>
   );
 }

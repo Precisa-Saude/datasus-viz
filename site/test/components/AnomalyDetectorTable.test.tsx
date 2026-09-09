@@ -108,3 +108,31 @@ describe('AnomalyDetectorTable', () => {
     expect(within(container).queryAllByRole('link')).toHaveLength(0);
   });
 });
+
+describe('legenda do baseline', () => {
+  it('explica de que mediana se trata, no hover', () => {
+    // "baseline (mediana)" sozinho não diz mediana de quê — a confusão
+    // é achar que é um agregado nacional, e não o histórico do próprio
+    // município.
+    renderTable([hit(0)]);
+    const botao = screen.getByRole('button', { name: /O que é baseline \(mediana\)/i });
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    fireEvent.mouseEnter(botao);
+    const tooltip = screen.getByRole('tooltip');
+    expect(tooltip).toHaveTextContent(/mediana do próprio município/i);
+    expect(tooltip).toHaveTextContent(/não uma média nacional/i);
+
+    fireEvent.mouseLeave(botao);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('abre por teclado e fecha no Escape', () => {
+    renderTable([hit(0)]);
+    const botao = screen.getByRole('button', { name: /O que é baseline/i });
+    fireEvent.focus(botao);
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    fireEvent.keyDown(botao, { key: 'Escape' });
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+});
