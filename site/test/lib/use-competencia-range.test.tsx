@@ -2,7 +2,11 @@ import { act, renderHook } from '@testing-library/react';
 import { MemoryRouter, useSearchParams } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
-import { useCompetenciaRange } from '@/lib/use-competencia-range';
+import {
+  brushDoubleClickRange,
+  useCompetenciaRange,
+  yearWindow,
+} from '@/lib/use-competencia-range';
 
 const COMPETENCIAS = [
   '2023-01',
@@ -112,5 +116,49 @@ describe('useCompetenciaRange', () => {
     });
     // O efeito de rewrite roda em sequência e enche os defaults.
     expect(result.current.api.range).toEqual({ from: '2023-03', to: '2024-02' });
+  });
+});
+
+describe('yearWindow', () => {
+  const COMPETENCIAS = [
+    ...Array.from({ length: 12 }, (_, i) => `2024-${String(i + 1).padStart(2, '0')}`),
+    '2025-01',
+    '2025-02',
+  ];
+
+  it('devolve Jan–Dez do ano que contém a competência', () => {
+    expect(yearWindow(COMPETENCIAS, '2024-06')).toEqual({ from: '2024-01', to: '2024-12' });
+  });
+
+  it('encolhe nas pontas da série', () => {
+    // 2025 só tem dois meses publicados.
+    expect(yearWindow(COMPETENCIAS, '2025-02')).toEqual({ from: '2025-01', to: '2025-02' });
+  });
+
+  it('devolve null para ano ausente da série', () => {
+    expect(yearWindow(COMPETENCIAS, '2019-03')).toBeNull();
+  });
+});
+
+describe('brushDoubleClickRange', () => {
+  const COMPETENCIAS = ['2024-01', '2024-06', '2024-12', '2025-01', '2025-02'];
+
+  it('abre o ano da competência clicada', () => {
+    expect(brushDoubleClickRange(COMPETENCIAS, '2024-06')).toEqual({
+      from: '2024-01',
+      to: '2024-12',
+    });
+  });
+
+  it('sem posição resolvível, cai no ano da competência mais recente', () => {
+    expect(brushDoubleClickRange(COMPETENCIAS, null)).toEqual({
+      from: '2025-01',
+      to: '2025-02',
+    });
+  });
+
+  it('devolve null com série vazia', () => {
+    expect(brushDoubleClickRange([], '2024-06')).toBeNull();
+    expect(brushDoubleClickRange([], null)).toBeNull();
   });
 });

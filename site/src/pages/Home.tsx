@@ -11,7 +11,7 @@ import type { AggregateIndex, CompetenciaRange, MunicipioAggregate } from '@/lib
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
 import { formatCompetenciaRange } from '@/lib/format';
 import { fetchMunicipioDetail, fetchVolumeByCompetencia } from '@/lib/queries';
-import { useCompetenciaRange } from '@/lib/use-competencia-range';
+import { brushDoubleClickRange, useCompetenciaRange } from '@/lib/use-competencia-range';
 import { useDataCubes } from '@/lib/use-data-cubes';
 
 async function loadManifest(): Promise<AggregateIndex> {
@@ -137,8 +137,8 @@ export default function Home() {
   // sempre um alvo útil, ao contrário do range default.
   const handleBrushReset = useCallback(
     (competencia: null | string) => {
-      const alvo = competencia ?? manifest?.competencias.at(-1) ?? null;
-      if (alvo) commitRange({ from: alvo, to: alvo });
+      const janela = brushDoubleClickRange(manifest?.competencias ?? [], competencia);
+      if (janela) commitRange(janela);
       else resetRange();
     },
     [manifest, commitRange, resetRange],

@@ -108,3 +108,35 @@ export function useCompetenciaRange(competencias: string[] | undefined): Compete
 
   return { range, resetRange, setRange };
 }
+
+/**
+ * Janela de 12 meses do ano-calendário que contém `competencia`,
+ * recortada pelo que existe na série.
+ *
+ * Ano-calendário e não "12 meses terminando no clique" porque o eixo do
+ * histograma é rotulado por ano: dar duplo-clique perto de "2018" e
+ * receber Jan–Dez 2018 é o que o rótulo promete. Nas pontas a janela
+ * encolhe — 2026 só tem dados até fevereiro.
+ */
+/**
+ * Janela que o duplo-clique no histograma deve abrir. `competencia` é o
+ * mês sob o cursor, ou `null` quando o brush não conseguiu resolver a
+ * posição — nesse caso cai no ano da competência mais recente.
+ */
+export function brushDoubleClickRange(
+  competencias: string[],
+  competencia: null | string,
+): CompetenciaRange | null {
+  if (competencias.length === 0) return null;
+  const alvo = competencia ?? competencias[competencias.length - 1];
+  return alvo === undefined ? null : yearWindow(competencias, alvo);
+}
+
+export function yearWindow(competencias: string[], competencia: string): CompetenciaRange | null {
+  const ano = competencia.slice(0, 4);
+  const doAno = competencias.filter((c) => c.startsWith(ano));
+  const from = doAno[0];
+  const to = doAno[doAno.length - 1];
+  if (from === undefined || to === undefined) return null;
+  return { from, to };
+}
