@@ -8,6 +8,12 @@ export function MapLegend({ drilldown }: { drilldown: boolean }) {
       <div className="text-muted-foreground mb-1">
         Volume de exames — {drilldown ? 'por município' : 'por UF'}
       </div>
+      {/* A escala é por posição relativa (percentil), não proporcional ao
+          volume — ver `buildPercentileScale` em `lib/map-layers.ts`. Dizer
+          só "menor → maior" sugeriria proporcionalidade que a cor não tem. */}
+      <div className="text-muted-foreground/80 mb-1.5 text-[10px]">
+        posição relativa · valores absolutos no tooltip
+      </div>
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-[10px]">menor</span>
         <div className="flex h-2 w-32 overflow-hidden rounded-sm">

@@ -1,6 +1,13 @@
 import type { CompetenciaRange } from './aggregates';
 import type { AnomalyHit, AnomalyKind } from './anomaly';
-import { anomaliesUrl, rawSiaPaUrl, ufPartitionUrl, ufTotalsUrl } from './data-source';
+import type { AnomalyFlagsPayload } from './anomaly-flags';
+import {
+  anomaliesUrl,
+  anomalyFlagsUrl,
+  rawSiaPaUrl,
+  ufPartitionUrl,
+  ufTotalsUrl,
+} from './data-source';
 import { queryAll } from './duckdb';
 import sigtapCatalog from './loinc-sigtap-catalog.generated.json';
 
@@ -242,6 +249,22 @@ export interface AnomaliesPayload {
  * Os hits já vêm ordenados por score (com tiebreak estável). O
  * explorador pagina/filtra client-side em cima dessa lista pequena.
  */
+/**
+ * Índice compacto de anomalias, carregado sob demanda e memoizado por
+ * módulo — o painel de detalhe pede uma vez e todas as aberturas
+ * seguintes reaproveitam. Falha é não-fatal: sem índice, o painel só
+ * não mostra o alerta.
+ */
+let anomalyFlagsPromise: null | Promise<AnomalyFlagsPayload> = null;
+
+export function fetchAnomalyFlags(): Promise<AnomalyFlagsPayload> {
+  anomalyFlagsPromise ??= fetch(anomalyFlagsUrl()).then((res) => {
+    if (!res.ok) throw new Error(`Falha ao carregar anomalies/flags (${res.status}).`);
+    return res.json() as Promise<AnomalyFlagsPayload>;
+  });
+  return anomalyFlagsPromise;
+}
+
 export async function fetchAnomalies(kind: AnomalyKind): Promise<AnomaliesPayload> {
   const res = await fetch(anomaliesUrl(kind));
   if (!res.ok) throw new Error(`Falha ao carregar anomalies/${kind} (${res.status}).`);

@@ -145,15 +145,34 @@ describe('detectPerCapitaOutliers', () => {
 });
 
 describe('detectConcentration', () => {
-  it('flagra município com share alto do par LOINC×competência', () => {
+  // munA (350000) tem 10k hab. e munB (350100) 200k — 4,8% e 95,2% da
+  // população do par. Um share de 80% em munA é ~17× a sua proporção.
+  const pop = (code: string, _year: number) => ({ '350000': 10000, '350100': 200000 })[code];
+  const OPTS = { minQuociente: 10, minTotal: 500, threshold: 0.5 };
+
+  it('flagra município cujo share supera em muito a proporção populacional', () => {
     const rows: AnomalyRow[] = [
       { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 800 },
       { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 200 },
     ];
-    const hits = detectConcentration(rows, { minTotal: 500, threshold: 0.5 });
+    const hits = detectConcentration(rows, pop, OPTS);
     expect(hits).toHaveLength(1);
     expect(hits[0]!.municipioCode).toBe('350000');
     expect(hits[0]!.details['share']).toBeCloseTo(0.8);
+    expect(hits[0]!.details['quociente']).toBeCloseTo(0.8 / (10000 / 210000), 3);
+    expect(hits[0]!.score).toBe(hits[0]!.details['quociente']);
+  });
+
+  it('não flagra município grande cujo share apenas acompanha a população', () => {
+    // Regressão do caso São Paulo: 5,8% da população e ~24% do volume
+    // cruzava o threshold de share, mas é só ~4× a própria proporção.
+    const rows: AnomalyRow[] = [
+      { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 960 },
+      { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 40 },
+    ];
+    const hits = detectConcentration(rows, pop, OPTS);
+    // munB tem 95,2% da população e 96% do volume — quociente ~1.
+    expect(hits).toHaveLength(0);
   });
 
   it('descarta par (LOINC, competência) com volume total abaixo de minTotal', () => {
@@ -161,17 +180,35 @@ describe('detectConcentration', () => {
       { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 8 },
       { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 2 },
     ];
-    const hits = detectConcentration(rows, { minTotal: 500, threshold: 0.5 });
-    expect(hits).toHaveLength(0);
+    expect(detectConcentration(rows, pop, OPTS)).toHaveLength(0);
   });
 
-  it('descarta share abaixo do threshold', () => {
+  it('descarta share abaixo do threshold mesmo com quociente alto', () => {
     const rows: AnomalyRow[] = [
       { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 100 },
       { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 900 },
     ];
-    const hits = detectConcentration(rows, { minTotal: 500, threshold: 0.5 });
-    expect(hits.map((h) => h.municipioCode)).toEqual(['350100']);
+    // munA: share 10% (< 50%), ainda que 2,1× a proporção populacional.
+    expect(detectConcentration(rows, pop, OPTS)).toHaveLength(0);
+  });
+
+  it('pula município sem população conhecida em vez de estimar denominador', () => {
+    const semPop = (code: string, _year: number) => (code === '350100' ? 200000 : undefined);
+    const rows: AnomalyRow[] = [
+      { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 800 },
+      { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 200 },
+    ];
+    expect(detectConcentration(rows, semPop, OPTS)).toHaveLength(0);
+  });
+
+  it('usa `observed` e `baseline` na mesma unidade do quociente', () => {
+    const rows: AnomalyRow[] = [
+      { ...munA, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 800 },
+      { ...munB, competencia: '2024-01', valorAprovadoBRL: 0, volumeExames: 200 },
+    ];
+    const hit = detectConcentration(rows, pop, OPTS)[0]!;
+    expect(hit.baseline).toBe(10);
+    expect(hit.observed).toBeCloseTo(hit.details['quociente'] as number, 6);
   });
 });
 

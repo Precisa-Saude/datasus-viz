@@ -10,3 +10,7 @@ CHANGELOG.md
 **/*.geojson
 # Dados pré-agregados gerados pelo `aggregate-sia.ts`.
 site/public/data/**
+# Artefatos gerados pelo compute-anomalies — formatar infla o arquivo
+# (flags.json: 340 KB numa linha vs. 506 KB indentado) sem ninguém ler
+# o diff, e o consumidor é o browser, não uma pessoa.
+site/public/anomalies/**

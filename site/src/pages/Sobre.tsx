@@ -40,6 +40,21 @@ export default function Sobre() {
             ANS, refinado por LLM (Gemini 3.1 Pro) para resolver colisões semânticas. 164
             biomarcadores do <code className="font-mono text-sm">@precisa-saude/fhir</code>.
           </li>
+          <li>
+            <strong>População</strong>: estimativas municipais do IBGE —{' '}
+            <a
+              className="underline"
+              href="https://sidra.ibge.gov.br/tabela/6579"
+              rel="noreferrer"
+              target="_blank"
+            >
+              SIDRA, agregado 6579
+            </a>
+            , variável 9324 (população residente). Usada para normalizar os detectores per capita e
+            de concentração. A série tem lacunas nos anos de censo e de não-publicação (2010, 2022 e
+            2023); para esses anos o lookup cai no ano publicado mais próximo do mesmo município, em
+            vez de interpolar.
+          </li>
         </ul>
       </section>
 
@@ -78,6 +93,45 @@ export default function Sobre() {
             populacional, usar com cuidado.
           </li>
         </ul>
+      </section>
+
+      <section className="mt-8 space-y-4">
+        <h2 className="font-sans text-xl font-semibold">Detectores de anomalia</h2>
+        <p>
+          O site marca combinações de município, competência e exame que destoam do padrão. A
+          marcação é <strong>estatística, não uma afirmação de erro ou irregularidade</strong>: os
+          valores exibidos são exatamente os que o DATASUS publicou, e a origem da divergência não é
+          observável a partir do dado agregado.
+        </p>
+        <ul className="list-disc space-y-2 pl-6">
+          <li>
+            <strong>Concentração</strong>: compara a fatia do volume nacional de um exame com a
+            fatia da população que o município representa, e marca a partir de{' '}
+            <strong>10× a proporção populacional</strong> (com pelo menos 20% do volume do par
+            exame×competência). A normalização por população é necessária: sem ela o detector media
+            sobretudo tamanho — São Paulo capital, com 5,8% da população, respondia sozinha por 64%
+            das marcações, com apenas ~4× a própria proporção. Municípios sem população publicada
+            são pulados, não estimados.
+          </li>
+          <li>
+            <strong>Per capita</strong>: exames por mil habitantes, restrito a municípios de 5 mil a
+            50 mil habitantes — o sinal de interesse é volume desproporcional em cidade pequena, não
+            escala demográfica de capital.
+          </li>
+          <li>
+            <strong>Pico temporal</strong>: volume de um mês frente à mediana histórica do próprio
+            município, que não depende de comparação entre municípios.
+          </li>
+          <li>
+            <strong>Preço por exame</strong>: reais por exame fora do intervalo interquartil do par
+            exame×ano.
+          </li>
+        </ul>
+        <p className="text-muted-foreground text-sm">
+          Os parâmetros são fixos no pipeline (
+          <code className="font-mono text-xs">scripts/compute-anomalies.ts</code>) e cada artefato
+          guarda o total de hits antes do truncamento em top-N, para que o corte seja auditável.
+        </p>
       </section>
 
       <section className="mt-8 space-y-4">
