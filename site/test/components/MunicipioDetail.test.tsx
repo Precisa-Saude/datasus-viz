@@ -1,6 +1,15 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+// O painel busca o índice de anomalias no mount. Sem mock, o fetch falha
+// no jsdom e o `console.warn` do caminho não-fatal polui a suíte. A
+// promessa fica pendente de propósito: resolver dispararia `setState`
+// fora de `act()` em todo teste deste arquivo, e o conteúdo do índice
+// já é coberto por `anomaly-flags` e `AnomalyBadge`.
+vi.mock('@/lib/queries', () => ({
+  fetchAnomalyFlags: vi.fn(() => new Promise(() => undefined)),
+}));
+
 import { MunicipioDetail } from '@/components/MunicipioDetail';
 import type { MunicipioAggregate } from '@/lib/aggregates';
 
@@ -136,5 +145,25 @@ describe('MunicipioDetail', () => {
     const rows = screen.getAllByRole('row').slice(1);
     // Todos os displays devem ser os LOINC
     expect(within(rows[0]!).getByText('2085-9')).toBeDefined();
+  });
+});
+
+describe('link LOINC', () => {
+  it('aponta pra página oficial do código no loinc.org, em nova aba', () => {
+    render(
+      <MunicipioDetail
+        biomarkersByLoinc={BIOMARKERS_BY_LOINC}
+        competenciaRange={{ from: '2024-01', to: '2024-12' }}
+        data={makeData()}
+        municipio={MUNICIPIO}
+        onClose={() => undefined}
+      />,
+    );
+    const link = screen.getByRole('link', { name: /LOINC 4548-4/ });
+    expect(link).toHaveAttribute('href', 'https://loinc.org/4548-4/');
+    expect(link).toHaveAttribute('target', '_blank');
+    // `noreferrer` também implica `noopener` — evita que a aba aberta
+    // alcance esta via `window.opener`.
+    expect(link).toHaveAttribute('rel', 'noreferrer');
   });
 });
