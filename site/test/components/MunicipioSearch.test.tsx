@@ -88,4 +88,31 @@ describe('MunicipioSearch', () => {
     fireEvent.change(input, { target: { value: 'zzzz' } });
     expect(await screen.findByText(/Nenhum município encontrado/)).toBeInTheDocument();
   });
+
+  it('fecha quando o foco sai do container', async () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: 'care' } });
+    await screen.findByRole('option');
+    // relatedTarget fora do container = foco saiu de vez.
+    fireEvent.blur(input, { relatedTarget: document.body });
+    await waitFor(() => expect(screen.queryByRole('option')).not.toBeInTheDocument());
+  });
+});
+
+describe('MunicipioSearch — falha ao carregar a tabela', () => {
+  it('explica em vez de ficar mudo', async () => {
+    const mod = await import('@/lib/municipios');
+    vi.mocked(mod.loadMunicipioNames).mockRejectedValueOnce(new Error('rede'));
+    const aviso = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    render(<MunicipioSearch onSelect={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Buscar município por nome'), {
+      target: { value: 'care' },
+    });
+
+    expect(
+      await screen.findByText(/Não foi possível carregar a lista de municípios/),
+    ).toBeInTheDocument();
+    aviso.mockRestore();
+  });
 });

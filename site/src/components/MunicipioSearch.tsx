@@ -34,6 +34,7 @@ function filtrar(index: MunicipioEntry[], termo: string): MunicipioEntry[] {
  */
 export function MunicipioSearch({ onSelect }: MunicipioSearchProps) {
   const [index, setIndex] = useState<MunicipioEntry[]>([]);
+  const [falhou, setFalhou] = useState(false);
   const [termo, setTermo] = useState('');
   const [ativo, setAtivo] = useState(0);
   const [aberto, setAberto] = useState(false);
@@ -45,8 +46,13 @@ export function MunicipioSearch({ onSelect }: MunicipioSearchProps) {
       (names) => {
         if (!cancelado) setIndex(buildMunicipioIndex(names));
       },
-      // eslint-disable-next-line no-console
-      (e: unknown) => console.warn('[MunicipioSearch]', e),
+      (e: unknown) => {
+        // Sem a tabela a busca não tem o que filtrar. Antes ela ficava
+        // muda — digitar não trazia nada e nada explicava por quê.
+        if (!cancelado) setFalhou(true);
+        // eslint-disable-next-line no-console
+        console.warn('[MunicipioSearch]', e);
+      },
     );
     return () => {
       cancelado = true;
@@ -59,6 +65,12 @@ export function MunicipioSearch({ onSelect }: MunicipioSearchProps) {
     [index, termoNormalizado],
   );
 
+  // Clampa, não só zera na troca de termo: a tabela chega de forma
+  // assíncrona, então `resultados` pode encolher sem o termo mudar e
+  // deixar `ativo` apontando para fora da lista.
+  useEffect(() => {
+    setAtivo((i) => (i < resultados.length ? i : 0));
+  }, [resultados]);
   useEffect(() => setAtivo(0), [termoNormalizado]);
 
   const escolher = useCallback(
@@ -90,14 +102,23 @@ export function MunicipioSearch({ onSelect }: MunicipioSearchProps) {
   const mostrarLista = aberto && termoNormalizado.length >= MIN_CHARS;
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div
+      className="relative"
+      onBlur={(e) => {
+        // `setTimeout` deixava um timer pendente se o componente
+        // desmontasse no meio. Fechar quando o foco sai do container
+        // resolve sem timer: no clique numa opção o `relatedTarget` é o
+        // próprio botão, que está aqui dentro.
+        if (!containerRef.current?.contains(e.relatedTarget as Node | null)) setAberto(false);
+      }}
+      ref={containerRef}
+    >
       <div className="border-border bg-card/95 flex items-center gap-2 rounded-lg border px-3 py-2 shadow-lg backdrop-blur-md">
         <Search aria-hidden="true" className="text-muted-foreground size-4 shrink-0" />
         <input
           aria-label="Buscar município por nome"
           autoComplete="off"
           className="placeholder:text-muted-foreground w-full bg-transparent font-margem text-sm outline-none"
-          onBlur={() => setTimeout(() => setAberto(false), 120)}
           onChange={(e) => {
             setTermo(e.target.value);
             setAberto(true);
@@ -118,7 +139,9 @@ export function MunicipioSearch({ onSelect }: MunicipioSearchProps) {
         >
           {resultados.length === 0 ? (
             <li className="text-muted-foreground px-3 py-2 font-margem text-xs">
-              Nenhum município encontrado
+              {falhou
+                ? 'Não foi possível carregar a lista de municípios'
+                : 'Nenhum município encontrado'}
             </li>
           ) : (
             resultados.map((m, i) => (
