@@ -1,3 +1,13 @@
+/**
+ * Legenda fixa no canto inferior esquerdo, ocupando ~16–243px.
+ *
+ * A régua de competência (em `Home`) divide essa borda: enquanto era
+ * centrada com `min(960px, 100vw-2rem)`, sua borda esquerda caía em
+ * `(100vw-960)/2` e cobria a legenda em telas estreitas — 83px de
+ * sobreposição a 1.280px. Lá a régua passou a ser ancorada à direita
+ * com `min(960px, 100vw-18rem)`, reservando espaço para esta legenda.
+ * Mexer na largura de uma exige conferir a outra.
+ */
 export function MapLegend({ drilldown }: { drilldown: boolean }) {
   const stops = ['#f3f0ff', '#c7b8ff', '#7856d2', '#463c6d', '#2a2241'];
   return (
