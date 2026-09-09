@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CompetenciaRange, MunicipioAggregate } from '@/lib/aggregates';
@@ -150,7 +150,7 @@ export function MunicipioDetail(props: MunicipioDetailProps) {
           </div>
         ) : (
           <table className="w-full font-margem text-xs">
-            <thead className="bg-muted/50 text-muted-foreground sticky top-0 text-[10px] font-medium uppercase tracking-wide">
+            <thead className="text-muted-foreground sticky top-0 z-10 text-[10px] font-medium uppercase tracking-wide">
               <tr>
                 <SortHeader
                   active={sortKey === 'display'}
@@ -181,7 +181,16 @@ export function MunicipioDetail(props: MunicipioDetailProps) {
                   <tr key={r.loinc} className="hover:bg-muted/40">
                     <td className="border-border border-t px-3 py-2">
                       <div>{r.display}</div>
-                      <div className="text-muted-foreground text-[10px]">LOINC {r.loinc}</div>
+                      <a
+                        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5 text-[10px] underline decoration-dotted underline-offset-2"
+                        href={`https://loinc.org/${r.loinc}/`}
+                        rel="noreferrer"
+                        target="_blank"
+                        title={`Abrir LOINC ${r.loinc} em loinc.org`}
+                      >
+                        LOINC {r.loinc}
+                        <ExternalLink aria-hidden="true" className="h-2.5 w-2.5" />
+                      </a>
                     </td>
                     <td className="border-border border-t px-3 py-2 text-right font-mono tabular-nums">
                       {formatInt(r.volume)}
@@ -215,7 +224,15 @@ function SortHeader({
 }) {
   const Icon = dir === 'asc' ? ChevronUp : ChevronDown;
   return (
-    <th className={cn('px-3 py-2', align === 'left' ? 'text-left' : 'text-right')}>
+    // Fundo opaco na própria célula: com `sticky`, `bg-muted/50` no
+    // <thead> deixava as linhas passarem por baixo enquanto rolavam, e
+    // background aplicado ao <thead> não pinta de forma confiável.
+    <th
+      className={cn(
+        'bg-muted border-border border-b px-3 py-2',
+        align === 'left' ? 'text-left' : 'text-right',
+      )}
+    >
       <button
         className={cn(
           'hover:text-foreground inline-flex items-center gap-1 transition-colors',

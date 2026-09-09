@@ -137,7 +137,7 @@ export function AnomalyBadge({ biomarkersByLoinc, flags }: AnomalyBadgeProps) {
       {aberto &&
         createPortal(
           <div
-            className="border-border bg-card text-card-foreground fixed z-50 rounded-md border p-2.5 text-left font-sans text-[10.5px] leading-snug font-normal shadow-lg"
+            className="border-border bg-card text-card-foreground fixed z-50 rounded-md border p-2.5 text-left font-sans text-xs leading-snug font-normal shadow-lg"
             id={tooltipId}
             role="tooltip"
             style={{ left: pos.left, top: pos.top, width: TOOLTIP_WIDTH }}
@@ -160,7 +160,7 @@ export function AnomalyBadge({ biomarkersByLoinc, flags }: AnomalyBadgeProps) {
             </ul>
             {/* Ressalva de leitura, não conteúdo principal — meio ponto
                 menor que a lista, pra não competir com ela. */}
-            <p className="text-muted-foreground/85 mt-2 text-[9.5px] leading-snug">
+            <p className="text-muted-foreground/85 mt-2 text-[10px] leading-snug">
               Os valores são exibidos exatamente como o DATASUS os publicou. A marcação vem dos
               detectores do próprio site e indica divergência estatística, não erro confirmado.
             </p>
