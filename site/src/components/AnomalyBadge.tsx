@@ -158,7 +158,9 @@ export function AnomalyBadge({ biomarkersByLoinc, flags }: AnomalyBadgeProps) {
                 </li>
               ))}
             </ul>
-            <p className="text-muted-foreground mt-2">
+            {/* Ressalva de leitura, não conteúdo principal — meio ponto
+                menor que a lista, pra não competir com ela. */}
+            <p className="text-muted-foreground/85 mt-2 text-[9.5px] leading-snug">
               Os valores são exibidos exatamente como o DATASUS os publicou. A marcação vem dos
               detectores do próprio site e indica divergência estatística, não erro confirmado.
             </p>
