@@ -139,10 +139,39 @@ async function fetchParquetOptVersion(sourceUrl: string): Promise<string> {
   return versao;
 }
 
+/**
+ * Pool de strings compartilhadas.
+ *
+ * O DuckDB devolve uma string nova por célula, então as ~21 milhões de
+ * linhas carregavam ~105 milhões de objetos de string — e o processo
+ * estourava o heap default do V8 (`AllocateRawWithRetryOrFailSlowPath`
+ * em `NewRawOneByteString`), só terminando com
+ * `--max-old-space-size=8192`.
+ *
+ * Os valores, porém, são poucos e repetidos: 222 competências, ~164
+ * LOINCs, 5.570 municípios (código e nome) e 27 UFs — cerca de 11 mil
+ * strings distintas no total. Reaproveitá-las troca 105 milhões de
+ * objetos por 11 mil, e o custo é uma consulta a `Map` por célula.
+ */
+function criarPool(): (valor: string) => string {
+  const pool = new Map<string, string>();
+  return (valor: string): string => {
+    const existente = pool.get(valor);
+    if (existente !== undefined) return existente;
+    pool.set(valor, valor);
+    return valor;
+  };
+}
+
+function heapMb(): number {
+  return Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+}
+
 async function loadAllRows(sourceUrl: string, parquetOptVersion: string): Promise<AnomalyRow[]> {
   const db = new duckdb.Database(':memory:');
   await runQuery(db, 'LOAD httpfs;');
   const all: AnomalyRow[] = [];
+  const intern = criarPool();
   for (const uf of ALL_UFS) {
     const url = `${sourceUrl}/parquet-opt/${parquetOptVersion}/uf=${uf}/part.parquet`;
     process.stderr.write(`  · ${uf} `);
@@ -161,8 +190,19 @@ async function loadAllRows(sourceUrl: string, parquetOptVersion: string): Promis
     );
     // `.push(...rows)` estoura o stack quando rows > ~100k (spread vira
     // argumentos). Iterar é seguro e tem custo desprezível aqui.
-    for (const r of rows) all.push(r);
-    process.stderr.write(`(${rows.length} rows, ${Date.now() - t0}ms)\n`);
+    //
+    // As strings passam pelo pool no mesmo laço: as cópias que o DuckDB
+    // criou viram lixo imediatamente, em vez de ficarem retidas pelo
+    // array até o fim do processo.
+    for (const r of rows) {
+      r.competencia = intern(r.competencia);
+      r.loinc = intern(r.loinc);
+      r.municipioCode = intern(r.municipioCode);
+      r.municipioNome = intern(r.municipioNome);
+      r.ufSigla = intern(r.ufSigla);
+      all.push(r);
+    }
+    process.stderr.write(`(${rows.length} rows, ${Date.now() - t0}ms, heap ${heapMb()} MB)\n`);
   }
   return new Promise((res, rej) => db.close((err) => (err ? rej(err) : res(all))));
 }
