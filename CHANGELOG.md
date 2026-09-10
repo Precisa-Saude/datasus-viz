@@ -1,3 +1,9 @@
+## [1.13.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.13.0...v1.13.1) (2026-09-10)
+
+### Bug Fixes
+
+* **site:** pool de strings em compute-anomalies evita estouro de heap ([#68](https://github.com/Precisa-Saude/datasus-viz/issues/68)) ([5f7ae10](https://github.com/Precisa-Saude/datasus-viz/commit/5f7ae103292f4361cc7bc704628e037081093210))
+
 ## [1.13.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.12.1...v1.13.0) (2026-09-09)
 
 ### Features
