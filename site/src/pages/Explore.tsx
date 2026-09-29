@@ -14,6 +14,7 @@ import type { PopulationDataset } from '@/lib/population';
 import { loadPopulation } from '@/lib/population';
 import type { AnomaliesPayload } from '@/lib/queries';
 import { fetchAnomalies } from '@/lib/queries';
+import { TYPE } from '@/lib/typography';
 
 /**
  * Explorador de atipicidades: lê os top-N hits pré-computados de cada
@@ -279,10 +280,10 @@ export default function Explore() {
   );
 
   return (
-    <div className="grid w-full gap-4 px-4 pt-24 pb-10 md:px-0" style={PAGE_GRID_STYLE}>
-      <header className="col-span-full space-y-1">
-        <h1 className="font-sans text-2xl font-semibold tracking-tight">Explorar atipicidades</h1>
-        <p className="text-muted-foreground font-sans text-sm">
+    <div className="grid w-full gap-4 px-4 pt-24 pb-16 md:px-0 lg:pt-32" style={PAGE_GRID_STYLE}>
+      <header className="col-span-full mb-4 space-y-4">
+        <h1 className={TYPE.pageTitle}>Explorar atipicidades</h1>
+        <p className={`max-w-3xl ${TYPE.lead}`}>
           Encontre municípios e períodos que destoam do padrão — picos temporais, concentração
           incomum ou valores fora da curva do exame.
         </p>
@@ -298,9 +299,7 @@ export default function Explore() {
       {manifest ? (
         <>
           <label className="col-span-full flex flex-col gap-1 md:col-span-3">
-            <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
-              UF
-            </span>
+            <span className={TYPE.label}>UF</span>
             <Combobox
               ariaLabel="Selecionar UF"
               items={ufItems}
@@ -311,9 +310,7 @@ export default function Explore() {
           </label>
 
           <label className="col-span-full flex flex-col gap-1 md:col-span-3">
-            <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
-              Município
-            </span>
+            <span className={TYPE.label}>Município</span>
             <Combobox
               ariaLabel="Selecionar município"
               items={municipioItems}
@@ -324,9 +321,7 @@ export default function Explore() {
           </label>
 
           <label className="col-span-full flex flex-col gap-1 md:col-span-6">
-            <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
-              Exame
-            </span>
+            <span className={TYPE.label}>Exame</span>
             <Combobox
               ariaLabel="Selecionar exame"
               items={loincItems}
@@ -336,7 +331,7 @@ export default function Explore() {
             />
           </label>
 
-          <div className="col-span-full mt-2 flex justify-center">
+          <div className="col-span-full mt-2 flex justify-start">
             <SlidingToggle<AnomalyKind>
               items={DETECTOR_TABS}
               onChange={setDetector}

@@ -90,7 +90,7 @@ export function OverviewTable(props: OverviewTableProps) {
           </div>
         ) : (
           <table className="w-full font-margem text-xs">
-            <thead className="text-muted-foreground sticky top-0 z-10 text-[10px] font-medium tracking-wide uppercase">
+            <thead className="text-muted-foreground sticky top-0 z-10 text-[11px] font-medium tracking-wide uppercase">
               <tr>
                 <SortHeader
                   active={sortKey === 'primary'}

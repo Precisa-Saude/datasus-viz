@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { CompetenciaRange } from '@/lib/aggregates';
 import { formatCompetencia, formatCompetenciaRange } from '@/lib/format';
+import { TYPE } from '@/lib/typography';
 
 export interface CompetenciaBrushProps {
   competencias: string[];
@@ -357,9 +358,7 @@ export function CompetenciaBrush({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-muted-foreground font-sans text-[11px] font-medium tracking-wide uppercase">
-        Competência
-      </span>
+      <span className={TYPE.label}>Competência</span>
       <div className="relative pt-6" ref={containerRef}>
         <span
           className="text-foreground pointer-events-none absolute top-0 font-sans text-sm font-semibold tabular-nums whitespace-nowrap"

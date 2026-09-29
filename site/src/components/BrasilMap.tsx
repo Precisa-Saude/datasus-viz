@@ -43,6 +43,9 @@ export interface BrasilMapProps {
   selectedUf: null | string;
   /** Totais nacionais por UF, agregados sobre a faixa via cubo. */
   ufTotals: Map<string, BinTotals>;
+  /** Disparado uma vez, no primeiro `idle` do MapLibre: tiles carregados
+   *  e polígonos pintados. Alimenta o progresso da carga inicial. */
+  onFirstRender?: () => void;
   onMunicipioClick: (m: SelectedMunicipio) => void;
   onUfClick: (ufSigla: string) => void;
   /** Disparado quando o usuário dá zoom out o suficiente no drill-down. */
@@ -227,6 +230,7 @@ export function BrasilMap(props: BrasilMapProps) {
         municipioNames: municipioNamesRef,
         popup: popupRef,
       });
+      map.once('idle', () => latestPropsRef.current?.onFirstRender?.());
     });
     return () => {
       map.remove();

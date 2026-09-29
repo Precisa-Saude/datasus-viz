@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { SelectedMunicipio } from '@/components/BrasilMap';
 import { BrasilMap } from '@/components/BrasilMap';
 import { CompetenciaBrush } from '@/components/CompetenciaBrush';
+import { MapLoadingProgress } from '@/components/MapLoadingProgress';
 import { MunicipioDetail } from '@/components/MunicipioDetail';
 import { MunicipioSearch } from '@/components/MunicipioSearch';
 import type { OverviewRow } from '@/components/OverviewTable';
@@ -59,6 +60,9 @@ export default function Home() {
   );
   const [error, setError] = useState<null | string>(null);
   const [refitUfSignal, setRefitUfSignal] = useState(0);
+  // Só a primeira carga mostra progresso; drill-downs reaproveitam o mapa.
+  const [mapReady, setMapReady] = useState(false);
+  const handleFirstRender = useCallback(() => setMapReady(true), []);
 
   const {
     range: competenciaRange,
@@ -317,6 +321,7 @@ export default function Home() {
             focusMunCodigo={selectedMun?.codigo ?? null}
             municipiosComSerie={municipiosComSerie}
             municipioTotals={municipioTotals}
+            onFirstRender={handleFirstRender}
             onMunicipioClick={handleMunicipioClick}
             onUfClick={handleUfClick}
             onZoomOutReset={handleBackToBrazil}
@@ -324,11 +329,11 @@ export default function Home() {
             selectedUf={selectedUf}
             ufTotals={ufTotals}
           />
-        ) : !error ? (
-          <div className="bg-background flex h-full w-full items-center justify-center">
-            <p className="text-muted-foreground font-margem text-sm">Carregando agregados…</p>
-          </div>
         ) : null}
+        <MapLoadingProgress
+          completed={(manifest ? 1 : 0) + (ufCube ? 1 : 0) + (mapReady ? 1 : 0)}
+          visible={!mapReady && !error}
+        />
       </div>
 
       {manifest ? (

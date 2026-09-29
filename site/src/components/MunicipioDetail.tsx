@@ -150,7 +150,7 @@ export function MunicipioDetail(props: MunicipioDetailProps) {
           </div>
         ) : (
           <table className="w-full font-margem text-xs">
-            <thead className="text-muted-foreground sticky top-0 z-10 text-[10px] font-medium uppercase tracking-wide">
+            <thead className="text-muted-foreground sticky top-0 z-10 text-[11px] font-medium uppercase tracking-wide">
               <tr>
                 <SortHeader
                   active={sortKey === 'display'}
