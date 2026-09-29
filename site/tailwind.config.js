@@ -34,8 +34,9 @@ export default {
         secondary: { DEFAULT: 'var(--secondary)', foreground: 'var(--secondary-foreground)' },
       },
       fontFamily: {
-        sans: ['Roboto', 'system-ui', 'sans-serif'],
-        serif: ['Roboto Serif', 'Georgia', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Margem', 'system-ui', 'sans-serif'],
+        serif: ['Pausa', 'Georgia', 'serif'],
       },
     },
   },

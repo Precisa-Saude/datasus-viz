@@ -18,6 +18,7 @@ import {
   fetchTrend,
   fetchTrendByUf,
 } from '@/lib/queries';
+import { TYPE } from '@/lib/typography';
 
 async function loadManifest(): Promise<AggregateIndex> {
   const res = await fetch(MANIFEST_URL);
@@ -318,14 +319,14 @@ export default function Tendencias() {
       : `Compare até ${MAX_SERIES} UFs para o mesmo exame ao longo da série histórica.`;
 
   return (
-    <div className="grid w-full gap-4 px-4 pt-24 pb-10 md:px-0" style={PAGE_GRID_STYLE}>
-      <header className="col-span-full space-y-1">
-        <h1 className="font-sans text-2xl font-semibold tracking-tight">Tendência temporal</h1>
-        <p className="text-muted-foreground font-sans text-sm">{headline}</p>
+    <div className="grid w-full gap-4 px-4 pt-24 pb-16 md:px-0 lg:pt-32" style={PAGE_GRID_STYLE}>
+      <header className="col-span-full mb-4 space-y-4">
+        <h1 className={TYPE.pageTitle}>Tendência temporal</h1>
+        <p className={`max-w-3xl ${TYPE.lead}`}>{headline}</p>
       </header>
 
       <SlidingToggle<Mode>
-        className="col-span-full mx-auto w-fit"
+        className="col-span-full w-fit"
         items={[
           { label: 'Comparar exames', value: 'exames' },
           { label: 'Comparar UFs', value: 'ufs' },
@@ -345,9 +346,7 @@ export default function Tendencias() {
       {/* Escopo geográfico (apenas modo exames) — combobox com busca. */}
       {mode === 'exames' && manifest ? (
         <label className="col-span-full flex flex-col gap-1 md:col-span-4">
-          <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
-            Escopo geográfico
-          </span>
+          <span className={TYPE.label}>Escopo geográfico</span>
           <Combobox
             ariaLabel="Selecionar escopo geográfico"
             items={escopoItems}
@@ -361,9 +360,7 @@ export default function Tendencias() {
       {/* Modo UFs: o exame único fica acima da linha de slots de UF. */}
       {mode === 'ufs' && manifest && singleLoinc !== null ? (
         <label className="col-span-full flex flex-col gap-1 md:col-span-4">
-          <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
-            Exame
-          </span>
+          <span className={TYPE.label}>Exame</span>
           <Combobox
             ariaLabel="Selecionar exame"
             items={biomarkerItems}
@@ -377,7 +374,7 @@ export default function Tendencias() {
       {/* Cabeçalho da seção de slots — só após boot. */}
       {manifest ? (
         <div className="col-span-full mt-2 flex items-center justify-between">
-          <span className="text-muted-foreground font-sans text-xs font-medium uppercase tracking-wide">
+          <span className={TYPE.label}>
             {slotsLabel} ({slotsCount}/{MAX_SERIES})
           </span>
           {slotsRemaining > 0 ? (
@@ -423,9 +420,7 @@ export default function Tendencias() {
       {manifest ? (
         <section className="border-border bg-card col-span-full mt-2 rounded-lg border p-6 shadow-sm">
           <div className="mb-4 flex items-baseline justify-between">
-            <p className="text-muted-foreground font-sans text-xs uppercase tracking-wide">
-              {escopoLabel}
-            </p>
+            <p className={TYPE.label}>{escopoLabel}</p>
             <p className="text-muted-foreground font-sans text-xs">
               Volume mensal de exames · valor R$ no tooltip
             </p>

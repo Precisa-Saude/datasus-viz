@@ -107,7 +107,7 @@ export function TrendChart({ data, series }: TrendChartProps) {
               background: 'var(--card)',
               border: `1px solid ${gridColor}`,
               borderRadius: 6,
-              fontFamily: "'Roboto', system-ui, sans-serif",
+              fontFamily: "'Margem', system-ui, sans-serif",
               fontSize: 12,
             }}
             cursor={{ stroke: gridColor, strokeWidth: 1 }}
@@ -126,7 +126,7 @@ export function TrendChart({ data, series }: TrendChartProps) {
             iconType="plainline"
             wrapperStyle={{
               color: textColor,
-              fontFamily: "'Roboto', system-ui, sans-serif",
+              fontFamily: "'Margem', system-ui, sans-serif",
               fontSize: 12,
               paddingTop: 12,
             }}

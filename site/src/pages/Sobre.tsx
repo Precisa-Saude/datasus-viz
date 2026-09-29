@@ -1,27 +1,42 @@
+import { DocLayout, InlineToc, type TocItem } from '../components/DocLayout';
+import { TYPE } from '../lib/typography';
+
+const TOC: readonly TocItem[] = [
+  { id: 'o-que-e', label: 'O que é' },
+  { id: 'fontes', label: 'Fontes' },
+  { id: 'limitacoes', label: 'Limitações conhecidas' },
+  { id: 'detectores', label: 'Detectores de anomalia' },
+  { id: 'licenca', label: 'Licença e uso' },
+];
+
 export default function Sobre() {
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-24 pb-10 font-serif leading-relaxed">
-      <h1 className="font-sans text-3xl font-bold tracking-tight">Sobre</h1>
+    <DocLayout toc={TOC}>
+      <header>
+        <h1 className={TYPE.pageTitle}>Sobre</h1>
+      </header>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="font-sans text-xl font-semibold">O que é</h2>
+      <InlineToc items={TOC} />
+
+      <section className="space-y-4" id="o-que-e">
+        <h2 className={TYPE.h2}>O que é</h2>
         <p>
           Visualização geográfica interativa dos exames laboratoriais faturados ao SUS. Os dados vêm
           do <strong>SIA-SUS — Produção Ambulatorial (PA)</strong>, filtrados pelo grupo SIGTAP{' '}
-          <code className="font-mono text-sm">02.02</code> (Diagnóstico em Laboratório Clínico) e
-          cruzados com o catálogo LOINC da plataforma Precisa Saúde para expor os dados em termos de
-          biomarcadores clínicos reconhecidos internacionalmente.
+          <code className="font-mono text-[0.9em]">02.02</code> (Diagnóstico em Laboratório Clínico)
+          e cruzados com o catálogo LOINC da plataforma Precisa Saúde para expor os dados em termos
+          de biomarcadores clínicos reconhecidos internacionalmente.
         </p>
       </section>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="font-sans text-xl font-semibold">Fontes</h2>
+      <section className="space-y-4" id="fontes">
+        <h2 className={TYPE.h2}>Fontes</h2>
         <ul className="list-disc space-y-2 pl-6">
           <li>
             <strong>DATASUS/SIA-SUS</strong>: microdados públicos do Sistema de Informações
             Ambulatoriais, baixados do FTP oficial (
-            <code className="font-mono text-sm">ftp.datasus.gov.br</code>). Schema vintage SIA-PA
-            2008+.
+            <code className="font-mono text-[0.9em]">ftp.datasus.gov.br</code>). Schema vintage
+            SIA-PA 2008+.
           </li>
           <li>
             <strong>Geometrias</strong>: shapefiles oficiais do IBGE distribuídos pelo projeto{' '}
@@ -38,7 +53,7 @@ export default function Sobre() {
           <li>
             <strong>LOINC ↔ SIGTAP</strong>: mapeamento derivado da tabela oficial TUSS↔SIGTAP da
             ANS, refinado por LLM (Gemini 3.1 Pro) para resolver colisões semânticas. 164
-            biomarcadores do <code className="font-mono text-sm">@precisa-saude/fhir</code>.
+            biomarcadores do <code className="font-mono text-[0.9em]">@precisa-saude/fhir</code>.
           </li>
           <li>
             <strong>População</strong>: estimativas municipais do IBGE —{' '}
@@ -58,8 +73,8 @@ export default function Sobre() {
         </ul>
       </section>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="font-sans text-xl font-semibold">Limitações conhecidas</h2>
+      <section className="space-y-4" id="limitacoes">
+        <h2 className={TYPE.h2}>Limitações conhecidas</h2>
         <ul className="list-disc space-y-2 pl-6">
           <li>
             <strong>Sub-registro</strong>: o SIA-SUS depende do faturamento do estabelecimento ao
@@ -82,21 +97,21 @@ export default function Sobre() {
           </li>
           <li>
             <strong>Semântica dos valores</strong>: o eixo "volume" usa{' '}
-            <code className="font-mono text-sm">PA_QTDAPR</code> (aprovada pelo SUS), que pode
+            <code className="font-mono text-[0.9em]">PA_QTDAPR</code> (aprovada pelo SUS), que pode
             divergir da quantidade apresentada. Valores em reais correntes, sem correção
             inflacionária.
           </li>
           <li>
             <strong>Recorte geográfico</strong>: agregação pela UF do estabelecimento executor (
-            <code className="font-mono text-sm">PA_UFMUN</code>), não pelo município de residência
-            do paciente. Para análise de acesso a serviços, este é o recorte certo; para prevalência
-            populacional, usar com cuidado.
+            <code className="font-mono text-[0.9em]">PA_UFMUN</code>), não pelo município de
+            residência do paciente. Para análise de acesso a serviços, este é o recorte certo; para
+            prevalência populacional, usar com cuidado.
           </li>
         </ul>
       </section>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="font-sans text-xl font-semibold">Detectores de anomalia</h2>
+      <section className="space-y-4" id="detectores">
+        <h2 className={TYPE.h2}>Detectores de anomalia</h2>
         <p>
           O site marca combinações de município, competência e exame que destoam do padrão. A
           marcação é <strong>estatística, não uma afirmação de erro ou irregularidade</strong>: os
@@ -134,8 +149,8 @@ export default function Sobre() {
         </p>
       </section>
 
-      <section className="mt-8 space-y-4">
-        <h2 className="font-sans text-xl font-semibold">Licença e uso</h2>
+      <section className="space-y-4" id="licenca">
+        <h2 className={TYPE.h2}>Licença e uso</h2>
         <p>
           Software licenciado sob{' '}
           <a
@@ -151,6 +166,6 @@ export default function Sobre() {
           profissional nem decisões clínicas.
         </p>
       </section>
-    </div>
+    </DocLayout>
   );
 }
