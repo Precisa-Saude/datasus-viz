@@ -1,3 +1,9 @@
+## [1.14.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.13.2...v1.14.0) (2026-09-29)
+
+### Features
+
+* **site:** adota a linguagem visual da /laudos ([#70](https://github.com/Precisa-Saude/datasus-viz/issues/70)) ([e6d79e2](https://github.com/Precisa-Saude/datasus-viz/commit/e6d79e28ddd8fcef95153101e9475b2f8eff7f28))
+
 ## [1.13.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.13.1...v1.13.2) (2026-09-23)
 
 ### Bug Fixes
