@@ -50,7 +50,12 @@ const HISTOGRAM_HEIGHT = 56;
 const HANDLE_HIT_WIDTH = 14;
 const HANDLE_PILL_WIDTH = 8;
 const HANDLE_PILL_HEIGHT = 22;
-const YEAR_LABEL_MIN_PX = 28;
+/**
+ * Distância mínima entre marcas de ano. Um ano em 10 px tem ~22 px de
+ * largura, e o primeiro rótulo é alinhado à esquerda (não centrado), então
+ * 28 px deixavam "20082010" colados em telas estreitas.
+ */
+const YEAR_LABEL_MIN_PX = 36;
 
 interface YearTick {
   idx: number;

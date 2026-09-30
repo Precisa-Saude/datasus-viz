@@ -63,14 +63,18 @@ describe('AnomalyDetectorTable', () => {
   it('renderiza apenas a página atual de hits e link para o município com janela de 1 mês exata', () => {
     const hits = Array.from({ length: 30 }, (_, i) => hit(i));
     renderTable(hits, 1, 10);
-    expect(screen.getByText('Cidade 0')).toBeInTheDocument();
+    // Tabela (desktop) e lista (celular) renderizam os mesmos achados; o
+    // CSS esconde uma das duas, mas no jsdom ambas estão no DOM.
+    expect(screen.getAllByText('Cidade 0')).toHaveLength(2);
     expect(screen.queryByText('Cidade 15')).not.toBeInTheDocument();
-    const link = screen.getByText('Cidade 0').closest('a') as HTMLAnchorElement;
+    const links = screen.getAllByText('Cidade 0').map((el) => el.closest('a') as HTMLAnchorElement);
     // Janela de 1 mês exato: from === to (`useCompetenciaRange` aceita
     // janela colapsada; o BETWEEN é inclusivo nos 2 extremos). hit(0)
     // tem competencia 2024-01, então o link só inclui janeiro/2024 —
     // o volume do painel de detalhe bate com o valor da linha.
-    expect(link.getAttribute('href')).toBe('/uf/SP/mun/350000?from=2024-01&to=2024-01');
+    for (const link of links) {
+      expect(link.getAttribute('href')).toBe('/uf/SP/mun/350000?from=2024-01&to=2024-01');
+    }
   });
 
   it('link preserva o mês exato do hit (sem somar o mês seguinte)', () => {
@@ -84,8 +88,10 @@ describe('AnomalyDetectorTable', () => {
       municipioNome: 'Pindamonhangaba',
     };
     renderTable([dec]);
-    const link = screen.getByText('Pindamonhangaba').closest('a') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/uf/SP/mun/353800?from=2013-01&to=2013-01');
+    for (const el of screen.getAllByText('Pindamonhangaba')) {
+      const link = el.closest('a') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe('/uf/SP/mun/353800?from=2013-01&to=2013-01');
+    }
   });
 
   it('mostra contador total na paginação', () => {

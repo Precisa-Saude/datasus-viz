@@ -49,6 +49,12 @@
     }
   }
 
+  /* Âncoras param abaixo do cabeçalho fixo (h-16, 64 px) com a mesma folga
+     do sumário (96 px no total; ver ACTIVE_LINE_PX em DocLayout.tsx). */
+  html {
+    scroll-padding-top: 6rem;
+  }
+
   /* Margem no corpo, nos dados e na interface; Pausa leve só nos títulos
      editoriais, pelas classes de `lib/typography.ts`. */
   body {

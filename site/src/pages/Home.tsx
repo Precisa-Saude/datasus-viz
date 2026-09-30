@@ -13,7 +13,13 @@ import type { AggregateIndex, CompetenciaRange, MunicipioAggregate } from '@/lib
 import { municipioKeys6 } from '@/lib/data-cube';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
 import { formatCompetenciaRange } from '@/lib/format';
-import { DETAIL_STYLE, PANEL_STYLE, SEARCH_STYLE } from '@/lib/home-layout';
+import {
+  BOTTOM_STACK_CLASS,
+  BRUSH_CLASS,
+  DETAIL_CLASS,
+  PANEL_STYLE,
+  SEARCH_STYLE,
+} from '@/lib/home-layout';
 import { fetchMunicipioDetail, fetchVolumeByCompetencia } from '@/lib/queries';
 import { brushDoubleClickRange, useCompetenciaRange } from '@/lib/use-competencia-range';
 import { useDataCubes } from '@/lib/use-data-cubes';
@@ -347,7 +353,7 @@ export default function Home() {
 
       {manifest && effectiveRange !== null ? (
         <aside
-          className="border-border bg-card/95 pointer-events-auto absolute z-10 space-y-2 overflow-auto rounded-lg border p-4 shadow-lg backdrop-blur-md"
+          className="border-border bg-card/95 pointer-events-auto absolute z-10 hidden space-y-2 overflow-auto rounded-lg border p-4 shadow-lg backdrop-blur-md lg:block"
           style={PANEL_STYLE}
         >
           <h1 className="font-margem text-base font-semibold tracking-tight">
@@ -375,24 +381,22 @@ export default function Home() {
         </aside>
       ) : null}
 
-      {manifest && competenciaRange !== null ? (
-        <div className="border-border bg-card/95 pointer-events-auto absolute right-4 bottom-6 z-10 w-[min(960px,calc(100vw-18rem))] rounded-lg border px-4 pt-2 pb-3 shadow-lg backdrop-blur-md">
-          <CompetenciaBrush
-            competencias={manifest.competencias}
-            onCommit={commitRange}
-            onPreview={setPreviewRange}
-            onReset={handleBrushReset}
-            value={competenciaRange}
-            volumeByCompetencia={volumeByCompetencia}
-          />
-        </div>
-      ) : null}
-
-      {tablePanel ? (
-        <div className="absolute z-10" style={DETAIL_STYLE}>
-          {tablePanel}
-        </div>
-      ) : null}
+      {/* No celular, tabela e brush empilhados no rodapé; no desktop, `contents`. */}
+      <div className={BOTTOM_STACK_CLASS}>
+        {tablePanel ? <div className={DETAIL_CLASS}>{tablePanel}</div> : null}
+        {manifest && competenciaRange !== null ? (
+          <div className={BRUSH_CLASS}>
+            <CompetenciaBrush
+              competencias={manifest.competencias}
+              onCommit={commitRange}
+              onPreview={setPreviewRange}
+              onReset={handleBrushReset}
+              value={competenciaRange}
+              volumeByCompetencia={volumeByCompetencia}
+            />
+          </div>
+        ) : null}
+      </div>
 
       {error !== null ? (
         <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-4 right-4 z-10 max-w-sm rounded-lg border p-4 font-margem text-sm shadow-lg backdrop-blur">

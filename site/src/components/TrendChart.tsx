@@ -26,6 +26,13 @@ export interface TrendChartProps {
 }
 
 const NF_INT = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+// Eixo Y compacto ("4,5 mi"): o número inteiro ocupava 80 px e, num
+// celular, deixava as linhas espremidas em pouco mais de 200 px. O tooltip
+// segue com o valor exato.
+const NF_COMPACT = new Intl.NumberFormat('pt-BR', {
+  maximumFractionDigits: 1,
+  notation: 'compact',
+});
 const NF_BRL = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
   maximumFractionDigits: 0,
@@ -98,9 +105,9 @@ export function TrendChart({ data, series }: TrendChartProps) {
           <YAxis
             axisLine={false}
             tick={{ fill: textColor, fontSize: 11 }}
-            tickFormatter={formatVolume}
+            tickFormatter={(v: number) => NF_COMPACT.format(v)}
             tickLine={false}
-            width={80}
+            width={48}
           />
           <Tooltip
             contentStyle={{

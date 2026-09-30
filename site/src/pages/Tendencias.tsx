@@ -11,6 +11,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { SlidingToggle } from '@/components/ui/sliding-toggle';
 import type { AggregateIndex } from '@/lib/aggregates';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
+import { PAGE_GRID_CLASS, PAGE_GRID_STYLE } from '@/lib/page-grid';
 import type { TrendPoint } from '@/lib/queries';
 import {
   fetchTopLoincsByVolume,
@@ -38,12 +39,6 @@ type Mode = 'exames' | 'ufs';
 // Paleta legível em fundo claro/escuro, contraste mútuo bom.
 // Hex puros (não tokens) porque recharts precisa do valor resolvido para legenda/tooltip.
 const SERIES_COLORS = ['#7c3aed', '#f59e0b', '#10b981'];
-
-const PAGE_GRID_STYLE = {
-  gridTemplateColumns: 'repeat(12, 1fr)',
-  margin: '0 auto',
-  maxWidth: 'calc(var(--col-w) * 12 + 11rem)',
-} as const;
 
 /**
  * Lê o estado inicial dos search params da URL (compartilhamento).
@@ -319,7 +314,7 @@ export default function Tendencias() {
       : `Compare até ${MAX_SERIES} UFs para o mesmo exame ao longo da série histórica.`;
 
   return (
-    <div className="grid w-full gap-4 px-4 pt-24 pb-16 md:px-0 lg:pt-32" style={PAGE_GRID_STYLE}>
+    <div className={PAGE_GRID_CLASS} style={PAGE_GRID_STYLE}>
       <header className="col-span-full mb-4 space-y-4">
         <h1 className={TYPE.pageTitle}>Tendência temporal</h1>
         <p className={`max-w-3xl ${TYPE.lead}`}>{headline}</p>
@@ -418,8 +413,8 @@ export default function Tendencias() {
       ) : null}
 
       {manifest ? (
-        <section className="border-border bg-card col-span-full mt-2 rounded-lg border p-6 shadow-sm">
-          <div className="mb-4 flex items-baseline justify-between">
+        <section className="border-border bg-card col-span-full mt-2 rounded-lg border p-4 shadow-sm sm:p-6">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <p className={TYPE.label}>{escopoLabel}</p>
             <p className="text-muted-foreground font-sans text-xs">
               Volume mensal de exames · valor R$ no tooltip

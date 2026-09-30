@@ -4,17 +4,20 @@ import { useSearchParams } from 'react-router-dom';
 
 import { AnomalyDetectorTable, hitKey } from '@/components/AnomalyDetectorTable';
 import { CnesBreakdown } from '@/components/CnesBreakdown';
+import { PeriodFilter } from '@/components/PeriodFilter';
 import type { ComboboxItem } from '@/components/ui/combobox';
 import { Combobox } from '@/components/ui/combobox';
 import { SlidingToggle } from '@/components/ui/sliding-toggle';
 import type { AggregateIndex } from '@/lib/aggregates';
 import type { AnomalyHit, AnomalyKind } from '@/lib/anomaly';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
+import { PAGE_GRID_CLASS, PAGE_GRID_STYLE } from '@/lib/page-grid';
 import type { PopulationDataset } from '@/lib/population';
 import { loadPopulation } from '@/lib/population';
 import type { AnomaliesPayload } from '@/lib/queries';
 import { fetchAnomalies } from '@/lib/queries';
 import { TYPE } from '@/lib/typography';
+import { inPeriod, usePeriodFilter } from '@/lib/use-period-filter';
 
 /**
  * Explorador de atipicidades: lê os top-N hits pré-computados de cada
@@ -38,12 +41,6 @@ const DETECTOR_TABS = [
   { label: 'Concentração', value: 'concentration' },
   { label: 'Preço/exame', value: 'price-ratio' },
 ] as const satisfies readonly { label: string; value: AnomalyKind }[];
-const PAGE_GRID_STYLE = {
-  gridTemplateColumns: 'repeat(12, 1fr)',
-  margin: '0 auto',
-  maxWidth: 'calc(var(--col-w) * 12 + 11rem)',
-} as const;
-
 const DETECTOR_LABELS: Record<AnomalyKind, string> = {
   concentration: 'Concentração',
   'per-capita': 'Per capita',
@@ -102,6 +99,8 @@ export default function Explore() {
     return 'spike';
   });
 
+  const period = usePeriodFilter(manifest?.competencias, searchParams);
+
   const [population, setPopulation] = useState<null | PopulationDataset>(null);
   const [payloads, setPayloads] = useState<PayloadCache>({});
   const [loadingKinds, setLoadingKinds] = useState<Set<AnomalyKind>>(new Set());
@@ -128,8 +127,12 @@ export default function Explore() {
     if (loinc !== ALL_LOINCS) next.set('loinc', loinc);
     if (municipioCode !== ALL_MUNICIPIOS) next.set('mun', municipioCode);
     if (detector !== 'spike') next.set('det', detector);
+    if (period.committed) {
+      next.set('from', period.committed.from);
+      next.set('to', period.committed.to);
+    }
     setSearchParams(next, { replace: true });
-  }, [manifest, ufSigla, loinc, municipioCode, detector, setSearchParams]);
+  }, [manifest, ufSigla, loinc, municipioCode, detector, period.committed, setSearchParams]);
 
   // Fetch lazy do artefato do detector ativo. Cada tab carrega seu
   // JSON pré-computado uma vez e cacheia — trocar de tab vira instant
@@ -169,10 +172,10 @@ export default function Explore() {
   const loading = loadingKinds.has(detector);
   const detectorError = errors[detector];
 
-  // Aplica filtros (UF / município / LOINC) sobre os hits pré-computados.
+  // Aplica filtros (UF / município / LOINC); o período entra em `hits`, depois.
   // Concentração mantém o `observed` apontando pro `share` em vez do
   // volume bruto — o dumbbell e o axis label esperam isso.
-  const hits = useMemo<AnomalyHit[]>(() => {
+  const filteredHits = useMemo<AnomalyHit[]>(() => {
     if (!payload) return [];
     const base =
       detector === 'concentration'
@@ -189,6 +192,11 @@ export default function Explore() {
       return true;
     });
   }, [payload, detector, ufSigla, loinc, municipioCode]);
+
+  const hits = useMemo(
+    () => filteredHits.filter((h) => inPeriod(h.competencia, period.effective)),
+    [filteredHits, period.effective],
+  );
 
   // Município dropdown: derivado dos hits do detector ativo. Só
   // aparecem municípios que de fato têm atipicidade — UX honesta e
@@ -227,7 +235,7 @@ export default function Explore() {
   });
   useEffect(() => {
     setPageByKind((prev) => ({ ...prev, [detector]: 1 }));
-  }, [detector, ufSigla, municipioCode, loinc]);
+  }, [detector, ufSigla, municipioCode, loinc, period.committed]);
 
   // Linha expandida pra detalhamento por CNES. Reseta quando contexto muda.
   const [selectedHit, setSelectedHit] = useState<AnomalyHit | null>(null);
@@ -280,7 +288,7 @@ export default function Explore() {
   );
 
   return (
-    <div className="grid w-full gap-4 px-4 pt-24 pb-16 md:px-0 lg:pt-32" style={PAGE_GRID_STYLE}>
+    <div className={PAGE_GRID_CLASS} style={PAGE_GRID_STYLE}>
       <header className="col-span-full mb-4 space-y-4">
         <h1 className={TYPE.pageTitle}>Explorar atipicidades</h1>
         <p className={`max-w-3xl ${TYPE.lead}`}>
@@ -331,7 +339,10 @@ export default function Explore() {
             />
           </label>
 
-          <div className="col-span-full mt-2 flex justify-start">
+          <PeriodFilter competencias={manifest.competencias} hits={filteredHits} period={period} />
+
+          {/* Num celular os quatro detectores não cabem: a faixa rola na horizontal. */}
+          <div className="col-span-full -mx-4 mt-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
             <SlidingToggle<AnomalyKind>
               items={DETECTOR_TABS}
               onChange={setDetector}
