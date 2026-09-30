@@ -110,13 +110,19 @@ export function TrendChart({ data, series }: TrendChartProps) {
             width={48}
           />
           <Tooltip
+            // O recharts não quebra linha no tooltip (`white-space: nowrap`);
+            // com três séries e o valor em R$, num celular ele passava da
+            // borda e fazia a página rolar na horizontal. Limitado à largura
+            // do gráfico, o texto quebra.
             contentStyle={{
               background: 'var(--card)',
               border: `1px solid ${gridColor}`,
               borderRadius: 6,
               fontFamily: "'Margem', system-ui, sans-serif",
               fontSize: 12,
+              whiteSpace: 'normal',
             }}
+            wrapperStyle={{ maxWidth: '100%', zIndex: 10 }}
             cursor={{ stroke: gridColor, strokeWidth: 1 }}
             formatter={(value, name, item) => {
               const row = (item as { payload?: PivotedRow }).payload;
