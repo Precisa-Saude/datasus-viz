@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { SelectedMunicipio } from '@/components/BrasilMap';
 import { BrasilMap } from '@/components/BrasilMap';
 import { CompetenciaBrush } from '@/components/CompetenciaBrush';
+import { MapBottomPanels } from '@/components/MapBottomPanels';
 import { MapLoadingProgress } from '@/components/MapLoadingProgress';
 import { MunicipioDetail } from '@/components/MunicipioDetail';
 import { MunicipioSearch } from '@/components/MunicipioSearch';
@@ -13,13 +14,7 @@ import type { AggregateIndex, CompetenciaRange, MunicipioAggregate } from '@/lib
 import { municipioKeys6 } from '@/lib/data-cube';
 import { MANIFEST_URL, setParquetOptVersion } from '@/lib/data-source';
 import { formatCompetenciaRange } from '@/lib/format';
-import {
-  BOTTOM_STACK_CLASS,
-  BRUSH_CLASS,
-  DETAIL_CLASS,
-  PANEL_STYLE,
-  SEARCH_STYLE,
-} from '@/lib/home-layout';
+import { PANEL_STYLE, SEARCH_STYLE } from '@/lib/home-layout';
 import { fetchMunicipioDetail, fetchVolumeByCompetencia } from '@/lib/queries';
 import { brushDoubleClickRange, useCompetenciaRange } from '@/lib/use-competencia-range';
 import { useDataCubes } from '@/lib/use-data-cubes';
@@ -381,11 +376,9 @@ export default function Home() {
         </aside>
       ) : null}
 
-      {/* No celular, tabela e brush empilhados no rodapé; no desktop, `contents`. */}
-      <div className={BOTTOM_STACK_CLASS}>
-        {tablePanel ? <div className={DETAIL_CLASS}>{tablePanel}</div> : null}
-        {manifest && competenciaRange !== null ? (
-          <div className={BRUSH_CLASS}>
+      <MapBottomPanels
+        brush={
+          manifest && competenciaRange !== null ? (
             <CompetenciaBrush
               competencias={manifest.competencias}
               onCommit={commitRange}
@@ -394,9 +387,13 @@ export default function Home() {
               value={competenciaRange}
               volumeByCompetencia={volumeByCompetencia}
             />
-          </div>
-        ) : null}
-      </div>
+          ) : null
+        }
+        range={effectiveRange}
+        selectedMun={selectedMun}
+        selectedUf={selectedUf}
+        table={tablePanel}
+      />
 
       {error !== null ? (
         <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-4 right-4 z-10 max-w-sm rounded-lg border p-4 font-margem text-sm shadow-lg backdrop-blur">

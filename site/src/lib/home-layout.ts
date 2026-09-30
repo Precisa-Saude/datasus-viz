@@ -29,7 +29,7 @@ export const DETAIL_CLASS =
   'pointer-events-auto h-[34svh] lg:absolute lg:top-[calc(4rem_+_1.5rem)] lg:right-[max((100vw_-_var(--grid-max-w))/2,1rem)] lg:z-10 lg:h-[calc((100vh_-_7rem)/2)] lg:w-[calc(var(--col-w)*4_+_3rem)]';
 
 export const BRUSH_CLASS =
-  'border-border bg-card/95 pointer-events-auto rounded-lg border px-4 pt-2 pb-3 shadow-lg backdrop-blur-md lg:absolute lg:right-4 lg:bottom-6 lg:z-10 lg:w-[min(960px,calc(100vw_-_18rem))]';
+  'pointer-events-auto lg:absolute lg:right-4 lg:bottom-6 lg:z-10 lg:w-[min(960px,calc(100vw_-_18rem))]';
 
 /** Busca fica entre os dois painéis do topo, centrada. */
 export const SEARCH_STYLE = { top: PANEL_TOP } as const;
