@@ -1,3 +1,9 @@
+## [1.14.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.0...v1.14.1) (2026-09-30)
+
+### Bug Fixes
+
+* **site:** layout mobile, âncoras abaixo do cabeçalho e filtro de período no Explorar ([#71](https://github.com/Precisa-Saude/datasus-viz/issues/71)) ([a9c47d0](https://github.com/Precisa-Saude/datasus-viz/commit/a9c47d00f6e44f6dad3cb1606c08bb0e0114c335))
+
 ## [1.14.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.13.2...v1.14.0) (2026-09-29)
 
 ### Features
