@@ -1,3 +1,9 @@
+## [1.14.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.1...v1.14.2) (2026-09-30)
+
+### Bug Fixes
+
+* **site:** painéis do mapa minimizáveis no celular e tooltip de Tendências sem vazar ([#72](https://github.com/Precisa-Saude/datasus-viz/issues/72)) ([f5641fd](https://github.com/Precisa-Saude/datasus-viz/commit/f5641fdea6d280f9eedc3e78c08ccd067da347c1))
+
 ## [1.14.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.0...v1.14.1) (2026-09-30)
 
 ### Bug Fixes
