@@ -6,6 +6,7 @@ import type { AnomalyHit, AnomalyKind, PopulationLookup } from '@/lib/anomaly';
 import { formatCompetencia } from '@/lib/format';
 
 import { AnomalyDumbbell, isDumbbellLogScale } from './AnomalyDumbbell';
+import { AnomalyHitList } from './AnomalyHitList';
 import { InfoTooltip } from './ui/info-tooltip';
 import { Pagination } from './ui/pagination';
 
@@ -90,6 +91,10 @@ function hitDrilldownSearch(hit: AnomalyHit): string {
   return `?from=${hit.competencia}&to=${hit.competencia}`;
 }
 
+function hitUrl(hit: AnomalyHit): string {
+  return `/uf/${hit.ufSigla}/mun/${hit.municipioCode}${hitDrilldownSearch(hit)}`;
+}
+
 export function AnomalyDetectorTable({
   axisLabel,
   formatValue,
@@ -119,9 +124,9 @@ export function AnomalyDetectorTable({
 
   return (
     <div className="border-border bg-card rounded-lg border p-4 shadow-sm">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
         <h2 className="font-sans text-sm font-semibold tracking-tight">{title}</h2>
-        <p className="text-muted-foreground flex items-center gap-3 font-sans text-[11px]">
+        <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-[11px]">
           <span className="inline-flex items-center gap-1">
             <span className="bg-muted-foreground inline-block size-2 rounded-full" />
             {BASELINE_LABELS[kind]}
@@ -141,7 +146,21 @@ export function AnomalyDetectorTable({
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden">
+        <AnomalyHitList
+          baselineLabel={BASELINE_LABELS[kind]}
+          color={color}
+          formatValue={formatValue}
+          hitKey={hitKey}
+          hits={pageHits}
+          labelForLoinc={labelForLoinc}
+          onHitSelect={onHitSelect}
+          selectedHitKey={selectedHitKey}
+          urlFor={hitUrl}
+        />
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <div className="grid min-w-[820px]" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
           <HeaderCell>Município</HeaderCell>
           <HeaderCell>UF</HeaderCell>
@@ -158,7 +177,7 @@ export function AnomalyDetectorTable({
             const rowBg = isHovered ? 'bg-muted/60' : '';
             const onEnter = (): void => setHoveredIdx(idx);
             const onLeave = (): void => setHoveredIdx((prev) => (prev === idx ? null : prev));
-            const url = `/uf/${hit.ufSigla}/mun/${hit.municipioCode}${hitDrilldownSearch(hit)}`;
+            const url = hitUrl(hit);
             return (
               <Fragment key={`${kind}-${hit.municipioCode}-${hit.competencia}-${hit.loinc}-${idx}`}>
                 <RowLinkCell

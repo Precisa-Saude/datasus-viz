@@ -50,7 +50,7 @@ export function SlidingToggle<T extends string>({
         return (
           <button
             className={cn(
-              'relative z-10 flex cursor-pointer items-center justify-center rounded-full px-5 py-1.5 text-center text-sm font-medium transition-colors duration-200',
+              'relative z-10 flex cursor-pointer items-center justify-center rounded-full px-4 py-1.5 text-center text-sm font-medium whitespace-nowrap transition-colors duration-200 sm:px-5',
               isActive ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
             key={item.value}
