@@ -70,7 +70,9 @@ export function rawSiaPaUrl(ano: number, ufSigla: string, mes: number): string {
 // Artefatos pré-computados pelo `compute-anomalies.ts` — top-N hits
 // por detector. Ficam committed em `site/public/anomalies/` e são
 // regenerados pelo `refresh.yml` sempre que o parquet-opt muda, que abre
-// um PR com o resultado (ver `compute-anomalies.ts`). Mesma origem que
+// um PR com o resultado (ver `compute-anomalies.ts`). Se a regeneração
+// falhar, nada é apagado: o site segue servindo a versão committed
+// anterior, defasada mas íntegra, até o próximo refresh. Mesma origem que
 // o site (relative URL) — não usa CDN porque é parte do bundle.
 export function anomaliesUrl(kind: string): string {
   return `/anomalies/${kind}.json`;
