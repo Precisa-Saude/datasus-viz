@@ -17,8 +17,11 @@
  *   pnpm -F @datasus-viz/site exec tsx scripts/compute-anomalies.ts
  *
  * Lê o parquet-opt diretamente do CDN público — não precisa ter
- * artefatos locais. Os JSONs gerados ficam committed no repo
- * (regenerados a cada refresh via `refresh.yml`).
+ * artefatos locais. Os JSONs gerados ficam committed no repo. O
+ * `refresh.yml` NÃO os regenera: rode este script (e depois
+ * `build-anomaly-flags.ts`) e commite o resultado sempre que o
+ * parquet-opt mudar, senão os alertas ficam defasados em relação ao
+ * mapa.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
