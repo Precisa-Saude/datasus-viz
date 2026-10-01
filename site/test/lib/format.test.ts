@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCompetencia, formatCompetenciaRange } from '@/lib/format';
+import { formatCompetencia, formatCompetenciaRange, formatGeradoEm } from '@/lib/format';
 
 describe('formatCompetencia', () => {
   it('formata YYYY-MM para "Mmm. YYYY"', () => {
@@ -24,5 +24,15 @@ describe('formatCompetenciaRange', () => {
 
   it('colapsa quando from === to', () => {
     expect(formatCompetenciaRange({ from: '2024-03', to: '2024-03' })).toBe('Mar. 2024');
+  });
+});
+
+describe('formatGeradoEm', () => {
+  it('formata ISO como dd/mm/aaaa', () => {
+    expect(formatGeradoEm('2026-10-01T16:49:14.258Z')).toBe('01/10/2026');
+  });
+
+  it('formata data inválida como travessão', () => {
+    expect(formatGeradoEm('não é data')).toBe('—');
   });
 });
