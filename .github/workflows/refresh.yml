@@ -157,12 +157,63 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: pnpm -F @datasus-viz/site upload:aws
 
+      # Espera a invalidação terminar: as atipicidades, logo abaixo, leem o
+      # manifest e o parquet-opt pelo CDN.
       - name: Invalidate CloudFront
         if: steps.diff.outputs.changed == 'true' && env.DIST_ID != ''
         run: |
-          aws cloudfront create-invalidation \
+          ID=$(aws cloudfront create-invalidation \
             --distribution-id "$DIST_ID" \
-            --paths '/parquet-opt/*' '/manifest/index.json'
+            --paths '/parquet-opt/*' '/manifest/index.json' \
+            --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$ID"
+
+      # Os artefatos de atipicidade ficam committed em site/public/anomalies/
+      # e dependem do parquet-opt publicado. Antes eram regenerados à mão e
+      # ficaram defasados (#74); agora o refresh os recalcula e abre um PR.
+      - name: Regenera atipicidades
+        id: anomalies
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: |
+          pnpm -F @datasus-viz/site build:anomalies
+          pnpm -F @datasus-viz/site anomaly-flags
+          if git diff --quiet -- site/public/anomalies; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Token do release-bot (PR das atipicidades)
+        id: app-token
+        if: steps.anomalies.outputs.changed == 'true'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Abre PR com as atipicidades regeneradas
+        if: steps.anomalies.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          VERSION=$(jq -r .parquetOptVersion site/build/manifest/index.json)
+          BRANCH="chore/atipicidades-${VERSION}"
+          git config user.name 'precisa-saude-release-bot[bot]'
+          git config user.email '${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git checkout -b "$BRANCH"
+          git add site/public/anomalies
+          git commit -m "chore(site): regenera atipicidades (${VERSION})"
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git push -u origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore(site): regenera atipicidades (${VERSION})" \
+            --body "Artefatos de \`site/public/anomalies/\` recalculados pelo refresh sobre o parquet-opt \`${VERSION}\`. Gerado automaticamente em ${RUN_URL}. Confira a contagem de hits por detector no diff antes de mergear."
 
       - name: Resumo
         if: always()
