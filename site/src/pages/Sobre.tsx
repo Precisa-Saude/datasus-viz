@@ -5,6 +5,7 @@ const TOC: readonly TocItem[] = [
   { id: 'o-que-e', label: 'O que é' },
   { id: 'fontes', label: 'Fontes' },
   { id: 'limitacoes', label: 'Limitações conhecidas' },
+  { id: 'revisoes', label: 'Atualizações e revisões' },
   { id: 'detectores', label: 'Detectores de anomalia' },
   { id: 'licenca', label: 'Licença e uso' },
 ];
@@ -106,6 +107,45 @@ export default function Sobre() {
             <code className="font-mono text-[0.9em]">PA_UFMUN</code>), não pelo município de
             residência do paciente. Para análise de acesso a serviços, este é o recorte certo; para
             prevalência populacional, usar com cuidado.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4" id="revisoes">
+        <h2 className={TYPE.h2}>Atualizações e revisões</h2>
+        <p>
+          Os números das competências mais recentes são <strong>provisórios</strong>. O DATASUS
+          publica um arquivo por UF e competência e, a cada publicação mensal, reescreve não só a
+          competência nova como as anteriores. Entre versões, os arquivos ganham e perdem registros,
+          o que é consistente com produção apresentada com atraso e com correções. Pelas datas dos
+          arquivos no FTP, cada publicação reescreve a competência mais recente e as 12 anteriores;
+          depois disso, a competência deixa de mudar. Esse padrão é observado nos próprios arquivos,
+          não uma regra publicada pelo DATASUS.
+        </p>
+        <ul className="list-disc space-y-2 pl-6">
+          <li>
+            <strong>Sem registro de alterações</strong>: o DATASUS não publica changelog nem
+            manifesto do que mudou entre uma versão e outra. O único sinal é a data e o tamanho de
+            cada arquivo no FTP.
+          </li>
+          <li>
+            <strong>Mudanças só aparecem decodificando o arquivo inteiro</strong>: os arquivos são
+            DBC (DBF compactado), e a ordem dos registros não se mantém entre publicações. Uma
+            comparação byte a byte ou por trecho não identifica o que mudou; é preciso baixar e
+            decodificar cada arquivo alterado.
+          </li>
+          <li>
+            <strong>O layout também muda</strong>: na publicação de setembro de 2026, os arquivos de
+            2025-08 a 2026-07 ganharam o campo{' '}
+            <code className="font-mono text-[0.9em]">PA_VL_CRD</code> (numérico), sem definição na
+            documentação pública do DATASUS e zerado em todos os arquivos que verificamos. O site
+            não usa esse campo.
+          </li>
+          <li>
+            <strong>Defasagem em relação ao DATASUS</strong>: este site reprocessa as competências
+            quando os arquivos do FTP mudam, mas entre uma publicação do DATASUS e o fim do
+            reprocessamento os valores exibidos podem corresponder à versão anterior. A data em
+            "Atualizado em" indica quando os dados do site foram gerados.
           </li>
         </ul>
       </section>
