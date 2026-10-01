@@ -1,3 +1,13 @@
+## [1.16.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.15.0...v1.16.0) (2026-10-01)
+
+### Features
+
+* **ci:** refresh regenera as atipicidades e abre PR ([#77](https://github.com/Precisa-Saude/datasus-viz/issues/77)) ([741a5b3](https://github.com/Precisa-Saude/datasus-viz/commit/741a5b3c76f14e0d06ecd5de948f080d0576c3a9)), closes [Precisa-Saude/datasus-parquet#46](https://github.com/Precisa-Saude/datasus-parquet/issues/46)
+
+### Chores
+
+* **deps:** atualiza @precisa-saude/worktree-cli para 1.14.3 ([#76](https://github.com/Precisa-Saude/datasus-viz/issues/76)) ([9f20364](https://github.com/Precisa-Saude/datasus-viz/commit/9f20364941708475e1f996c6dd5757fffc26f03f)), closes [#23](https://github.com/Precisa-Saude/datasus-viz/issues/23)
+
 ## [1.15.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.2...v1.15.0) (2026-10-01)
 
 ### Features
