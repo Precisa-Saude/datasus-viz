@@ -18,10 +18,9 @@
  *
  * Lê o parquet-opt diretamente do CDN público — não precisa ter
  * artefatos locais. Os JSONs gerados ficam committed no repo. O
- * `refresh.yml` NÃO os regenera: rode este script (e depois
- * `build-anomaly-flags.ts`) e commite o resultado sempre que o
- * parquet-opt mudar, senão os alertas ficam defasados em relação ao
- * mapa.
+ * `refresh.yml` roda este script e o `build-anomaly-flags.ts` depois de
+ * publicar um parquet-opt novo e abre um PR com o resultado. Para rodar à
+ * mão, a ordem é a mesma; commite os dois resultados juntos.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
