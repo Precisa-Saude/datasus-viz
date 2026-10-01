@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
-import { DataFreshness, formatGeradoEm } from '@/components/DataFreshness';
+import { DataFreshness } from '@/components/DataFreshness';
 import type { AggregateIndex } from '@/lib/aggregates';
 
 function competencias(from: string, count: number): string[] {
@@ -49,9 +49,5 @@ describe('DataFreshness', () => {
   it('sempre mostra a data de geração dos dados', () => {
     renderFreshness('2024-01', '2025-06');
     expect(screen.getByText('Atualizado em 01/10/2026')).toBeInTheDocument();
-  });
-
-  it('formata data inválida como travessão', () => {
-    expect(formatGeradoEm('não é data')).toBe('—');
   });
 });

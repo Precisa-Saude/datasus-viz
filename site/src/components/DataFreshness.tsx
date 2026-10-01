@@ -2,19 +2,8 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { AggregateIndex, CompetenciaRange } from '@/lib/aggregates';
-import { formatCompetenciaRange } from '@/lib/format';
+import { formatCompetenciaRange, formatGeradoEm } from '@/lib/format';
 import { firstProvisionalCompetencia, provisionalOverlap } from '@/lib/provisional';
-
-const GERADO_EM_FMT = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
-
-export function formatGeradoEm(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : GERADO_EM_FMT.format(d);
-}
 
 interface DataFreshnessProps {
   manifest: AggregateIndex;
