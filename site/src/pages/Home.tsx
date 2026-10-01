@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { SelectedMunicipio } from '@/components/BrasilMap';
 import { BrasilMap } from '@/components/BrasilMap';
 import { CompetenciaBrush } from '@/components/CompetenciaBrush';
+import { DataFreshness } from '@/components/DataFreshness';
 import { MapBottomPanels } from '@/components/MapBottomPanels';
 import { MapLoadingProgress } from '@/components/MapLoadingProgress';
 import { MunicipioDetail } from '@/components/MunicipioDetail';
@@ -30,17 +31,6 @@ async function loadManifest(): Promise<AggregateIndex> {
   const m = (await res.json()) as AggregateIndex;
   setParquetOptVersion(m.parquetOptVersion);
   return m;
-}
-
-const GERADO_EM_FMT = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
-
-function formatGeradoEm(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : GERADO_EM_FMT.format(d);
 }
 
 export default function Home() {
@@ -367,12 +357,7 @@ export default function Home() {
               : '—'}
             .
           </p>
-          <p
-            className="text-muted-foreground/80 font-margem text-[11px] leading-snug"
-            title={`Anos cobertos: ${manifest.years.join(', ') || '—'} · ${manifest.competencias.length} competências`}
-          >
-            Atualizado em {formatGeradoEm(manifest.geradoEm)}
-          </p>
+          <DataFreshness manifest={manifest} range={effectiveRange} />
         </aside>
       ) : null}
 
