@@ -1,3 +1,17 @@
+## [1.15.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.2...v1.15.0) (2026-10-01)
+
+### Features
+
+* **site:** sinaliza competências provisórias no painel do mapa ([#75](https://github.com/Precisa-Saude/datasus-viz/issues/75)) ([ddcc832](https://github.com/Precisa-Saude/datasus-viz/commit/ddcc832ca448528849bd210c799a626649357e7c))
+
+### Documentation
+
+* **site:** explica revisões do DATASUS na página Sobre ([#73](https://github.com/Precisa-Saude/datasus-viz/issues/73)) ([142dcec](https://github.com/Precisa-Saude/datasus-viz/commit/142dcec2b44ea7fd98921b0ead770b75799f8548))
+
+### Chores
+
+* **site:** regenera atipicidades com os dados revisados ([#74](https://github.com/Precisa-Saude/datasus-viz/issues/74)) ([7975415](https://github.com/Precisa-Saude/datasus-viz/commit/79754155ac914d74ee8a5ec74cb065ea44f9248f))
+
 ## [1.14.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.14.1...v1.14.2) (2026-09-30)
 
 ### Bug Fixes
