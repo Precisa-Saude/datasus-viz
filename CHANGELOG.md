@@ -1,3 +1,9 @@
+## [1.16.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.0...v1.16.1) (2026-10-02)
+
+### Bug Fixes
+
+* **deps:** datasus-sdk ^2.1.1 no CLI, no site e nos exemplos ([#78](https://github.com/Precisa-Saude/datasus-viz/issues/78)) ([6be194a](https://github.com/Precisa-Saude/datasus-viz/commit/6be194aee340278f3d6183062f2ec839f05ff472))
+
 ## [1.16.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.15.0...v1.16.0) (2026-10-01)
 
 ### Features
