@@ -7,7 +7,7 @@
     "cnes-establishments": "tsx cnes-establishments.ts"
   },
   "dependencies": {
-    "@precisa-saude/datasus-sdk": "^2.0.1"
+    "@precisa-saude/datasus-sdk": "^2.1.1"
   },
   "devDependencies": {
     "tsx": "^4.21.0"
