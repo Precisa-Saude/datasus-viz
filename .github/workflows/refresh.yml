@@ -41,6 +41,24 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 480
+    # O `permissions` do topo vale `contents: read`, e o passo que abre o PR das
+    # atipicidades precisa escrever. Sem este bloco o `GITHUB_TOKEN` do job é só
+    # de leitura, e o `actions/checkout` grava esse token num
+    # `http.https://github.com/.extraheader` que tem precedência sobre o que
+    # estiver na URL do remoto: o token do app era criado, a URL era reescrita, e
+    # o push saía assim mesmo com a identidade errada.
+    #
+    #   remote: Permission to Precisa-Saude/datasus-viz.git denied to github-actions[bot].
+    #
+    # Mesmo desenho do `loinc-check.yml` no fhir-brasil: restritivo no topo,
+    # aberto só no job que escreve.
+    #
+    # Sem `pull-requests: write` de propósito: quem abre o PR é o `gh`, e ele
+    # autentica com o token do app (`GH_TOKEN`), não com o `GITHUB_TOKEN` do
+    # job. Dar a permissão aqui não mudaria nada e só alargaria o token à toa.
+    permissions:
+      contents: write
+      id-token: write # OIDC para assumir AWS_ROLE_ARN
     env:
       AWS_REGION: sa-east-1
       BUCKET: ${{ secrets.S3_BUCKET }}
@@ -201,6 +219,15 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
+          # `set -u` pega variável ausente, não variável vazia, e token vazio é
+          # o modo de falha que interessa aqui: o push sairia com a credencial
+          # que o checkout deixou no `extraheader` e o erro falaria de outra
+          # identidade, que foi o que custou a diagnosticar da primeira vez.
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::Token do release-bot veio vazio; conferir RELEASE_APP_ID e RELEASE_APP_PRIVATE_KEY."
+            exit 1
+          fi
           VERSION=$(jq -r .parquetOptVersion site/build/manifest/index.json)
           BRANCH="chore/atipicidades-${VERSION}"
           git config user.name 'precisa-saude-release-bot[bot]'
