@@ -53,8 +53,14 @@ export default function Sobre() {
           </li>
           <li>
             <strong>LOINC ↔ SIGTAP</strong>: mapeamento derivado da tabela oficial TUSS↔SIGTAP da
-            ANS, refinado por LLM (Gemini 3.1 Pro) para resolver colisões semânticas. 164
-            biomarcadores do <code className="font-mono text-[0.9em]">@precisa-saude/fhir</code>.
+            ANS, refinado por LLM (Gemini 3.1 Pro) e revisado à mão (nomes longos LOINC conferidos
+            na tabela do NLM), publicado em{' '}
+            <code className="font-mono text-[0.9em]">@precisa-saude/datasus-sdk</code> a partir do
+            catálogo de biomarcadores do{' '}
+            <code className="font-mono text-[0.9em]">@precisa-saude/fhir</code>. Quando mais de um
+            biomarcador cai no mesmo procedimento SIGTAP (glicose sérica e na urina, T3 livre e
+            total), o site rotula o procedimento com o analito que ele de fato mede — o sérico, o
+            total — e nunca com uma fração ou outro espécime.
           </li>
           <li>
             <strong>População</strong>: estimativas municipais do IBGE —{' '}
@@ -92,9 +98,21 @@ export default function Sobre() {
             .
           </li>
           <li>
-            <strong>Cobertura LOINC</strong>: o enrichment cobre apenas os 164 biomarcadores do
-            catálogo Precisa Saúde. Exames do grupo 02.02 fora dessa lista aparecem nas agregações
-            brutas mas não têm equivalência LOINC exibida.
+            <strong>Cobertura LOINC</strong>: só entram no site os procedimentos 02.02 com
+            equivalente no catálogo de biomarcadores da Precisa Saúde. Ficam de fora os painéis sem
+            LOINC único — hemograma completo (
+            <code className="font-mono text-[0.9em]">02.02.02.038-0</code>) e exame de urina EAS (
+            <code className="font-mono text-[0.9em]">02.02.05.001-7</code>), os dois procedimentos
+            de maior volume do grupo — e a IgE alérgeno-específica (
+            <code className="font-mono text-[0.9em]">02.02.03.103-9</code>), genérica demais para um
+            alérgeno só. O volume total do 02.02 é, portanto, bem maior do que a soma das séries
+            exibidas.
+          </li>
+          <li>
+            <strong>Painéis rotulados pelo analito principal</strong>: "Bilirrubina total e frações"
+            aparece como bilirrubina total e "Proteínas totais e frações" como albumina (o SUS não
+            tem código isolado de albumina). Proteína C-reativa soma o código genérico e o
+            quantitativo.
           </li>
           <li>
             <strong>Semântica dos valores</strong>: o eixo "volume" usa{' '}
