@@ -41,6 +41,21 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 480
+    # O `permissions` do topo vale `contents: read`, e o passo que abre o PR das
+    # atipicidades precisa escrever. Sem este bloco o `GITHUB_TOKEN` do job é só
+    # de leitura, e o `actions/checkout` grava esse token num
+    # `http.https://github.com/.extraheader` que tem precedência sobre o que
+    # estiver na URL do remoto: o token do app era criado, a URL era reescrita, e
+    # o push saía assim mesmo com a identidade errada.
+    #
+    #   remote: Permission to Precisa-Saude/datasus-viz.git denied to github-actions[bot].
+    #
+    # Mesmo desenho do `loinc-check.yml` no fhir-brasil: restritivo no topo,
+    # aberto só no job que escreve.
+    permissions:
+      contents: write
+      id-token: write # OIDC para assumir AWS_ROLE_ARN
+      pull-requests: write
     env:
       AWS_REGION: sa-east-1
       BUCKET: ${{ secrets.S3_BUCKET }}
@@ -201,6 +216,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           VERSION=$(jq -r .parquetOptVersion site/build/manifest/index.json)
           BRANCH="chore/atipicidades-${VERSION}"
           git config user.name 'precisa-saude-release-bot[bot]'
