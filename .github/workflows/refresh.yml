@@ -65,6 +65,11 @@ jobs:
       DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # O checkout v7 persiste o GITHUB_TOKEN via includeIf → credentials
+          # config, não mais via extraheader. Persistido, ele vence a URL com o
+          # token do release-bot e o push da branch de atipicidades leva 403.
+          persist-credentials: false
 
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
 
@@ -235,7 +240,6 @@ jobs:
           git checkout -b "$BRANCH"
           git add site/public/anomalies
           git commit -m "chore(site): regenera atipicidades (${VERSION})"
-          git config --local --unset-all http.https://github.com/.extraheader || true
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git push -u origin "$BRANCH"
           gh pr create --base main --head "$BRANCH" \
