@@ -1,3 +1,9 @@
+## [1.16.4](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.3...v1.16.4) (2026-10-06)
+
+### Bug Fixes
+
+* **site:** adota datasus-sdk 2.1.2 e explica a rotulagem LOINC na página Sobre ([#82](https://github.com/Precisa-Saude/datasus-viz/issues/82)) ([a836a09](https://github.com/Precisa-Saude/datasus-viz/commit/a836a0913229c2c8086b9e6ab3cf7ff6da8ef033)), closes [Precisa-Saude/datasus-sdk#24](https://github.com/Precisa-Saude/datasus-sdk/issues/24)
+
 ## [1.16.3](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.2...v1.16.3) (2026-10-06)
 
 ### Bug Fixes
