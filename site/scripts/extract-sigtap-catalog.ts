@@ -18,7 +18,7 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { listBiomarkers, loincToSigtap } from '@precisa-saude/datasus-sdk';
+import { listBiomarkers } from '@precisa-saude/datasus-sdk';
 
 const OUT_PATH = resolve(
   fileURLToPath(import.meta.url),
@@ -27,20 +27,19 @@ const OUT_PATH = resolve(
 
 const byLoinc = new Map<string, Set<string>>();
 
+// Só os representantes reversos entram: é o que `sigtapToLoinc` devolve
+// na agregação, logo é o que aparece no manifesto e nas queries do site.
+// Biomarcadores que mapeiam para um SIGTAP compartilhado sem representá-lo
+// (glicose na urina → "Dosagem de glicose") ficam de fora para o catálogo
+// não sugerir um LOINC que nenhum agregado usa. `sigtapAlso` cobre os
+// casos em que um biomarcador tem mais de um código SUS (PCR genérica +
+// quantitativa).
 for (const mapping of listBiomarkers()) {
-  if (mapping.loinc == null || mapping.sigtap == null) continue;
+  if (mapping.loinc == null || mapping.sigtap == null || !mapping.reversePrimary) continue;
   const set = byLoinc.get(mapping.loinc) ?? new Set<string>();
   set.add(mapping.sigtap);
+  for (const extra of mapping.sigtapAlso) set.add(extra);
   byLoinc.set(mapping.loinc, set);
-}
-
-// `listBiomarkers()` indexa por biomarker_code (uma entrada por
-// biomarcador); o `byLoinc` interno do SDK também só mantém uma
-// entrada por LOINC. Reforçamos o resultado consultando o catálogo
-// pelo lado direto.
-for (const loinc of byLoinc.keys()) {
-  const direct = loincToSigtap(loinc);
-  if (direct?.sigtap != null) byLoinc.get(loinc)!.add(direct.sigtap);
 }
 
 const catalog: Record<string, string[]> = {};

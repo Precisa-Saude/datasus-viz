@@ -101,10 +101,13 @@ describe('runSia', () => {
   });
 
   it('--enrich-loinc anexa biomarker e loinc ao agregado', async () => {
-    // Pega um SIGTAP do catálogo real para garantir o enrichment
+    // Pega um SIGTAP do catálogo real para garantir o enrichment. Precisa
+    // ser o representante reverso do SIGTAP: `enrichWithLoinc` resolve
+    // via `sigtapToLoinc`, que devolve só o primário quando o código é
+    // compartilhado (ex: glicose sérica × glicose na urina).
     const real = (await import('@precisa-saude/datasus-sdk'))
       .listBiomarkers()
-      .find((b) => b.sigtap);
+      .find((b) => b.sigtap && b.reversePrimary);
     expect(real).toBeDefined();
 
     vi.mocked(sia.streamProducaoAmbulatorial).mockReturnValue(
