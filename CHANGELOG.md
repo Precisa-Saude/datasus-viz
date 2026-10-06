@@ -1,3 +1,9 @@
+## [1.16.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.1...v1.16.2) (2026-10-06)
+
+### Bug Fixes
+
+* **ci:** o refresh não tinha permissão para empurrar a branch das atipicidades ([#80](https://github.com/Precisa-Saude/datasus-viz/issues/80)) ([cb5405e](https://github.com/Precisa-Saude/datasus-viz/commit/cb5405e6497a4dd071082434599a5484db4c85c3)), closes [#77](https://github.com/Precisa-Saude/datasus-viz/issues/77)
+
 ## [1.16.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.0...v1.16.1) (2026-10-02)
 
 ### Bug Fixes
