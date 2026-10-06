@@ -1,3 +1,13 @@
+## [1.16.3](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.2...v1.16.3) (2026-10-06)
+
+### Bug Fixes
+
+* **ci:** push das atipicidades levava 403 com o token do Actions ([#79](https://github.com/Precisa-Saude/datasus-viz/issues/79)) ([e3ff392](https://github.com/Precisa-Saude/datasus-viz/commit/e3ff3929765d88e61cb4d0d83f0df437cc0868a7))
+
+### Chores
+
+* **ci:** tira a permissão que a [#79](https://github.com/Precisa-Saude/datasus-viz/issues/79) tornou desnecessária e corrige o comentário ([#81](https://github.com/Precisa-Saude/datasus-viz/issues/81)) ([8c64529](https://github.com/Precisa-Saude/datasus-viz/commit/8c645297bfd8350f6f0c67bf2e99da3b744e48c4)), closes [#80](https://github.com/Precisa-Saude/datasus-viz/issues/80)
+
 ## [1.16.2](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.1...v1.16.2) (2026-10-06)
 
 ### Bug Fixes
