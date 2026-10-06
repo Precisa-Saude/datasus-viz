@@ -41,23 +41,13 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 480
-    # O `permissions` do topo vale `contents: read`, e o passo que abre o PR das
-    # atipicidades precisa escrever. Sem este bloco o `GITHUB_TOKEN` do job é só
-    # de leitura, e o `actions/checkout` grava esse token num
-    # `http.https://github.com/.extraheader` que tem precedência sobre o que
-    # estiver na URL do remoto: o token do app era criado, a URL era reescrita, e
-    # o push saía assim mesmo com a identidade errada.
+    # Só o OIDC da AWS. O `GITHUB_TOKEN` deste job não escreve em lugar nenhum:
+    # o push da branch de atipicidades vai com o token do release-bot, posto na
+    # URL do remoto, e quem abre o PR é o `gh` autenticado com o mesmo token.
     #
-    #   remote: Permission to Precisa-Saude/datasus-viz.git denied to github-actions[bot].
-    #
-    # Mesmo desenho do `loinc-check.yml` no fhir-brasil: restritivo no topo,
-    # aberto só no job que escreve.
-    #
-    # Sem `pull-requests: write` de propósito: quem abre o PR é o `gh`, e ele
-    # autentica com o token do app (`GH_TOKEN`), não com o `GITHUB_TOKEN` do
-    # job. Dar a permissão aqui não mudaria nada e só alargaria o token à toa.
+    # Bloco de job substitui o do topo em vez de somar, então o `id-token`
+    # precisa ser repetido aqui mesmo já estando lá em cima.
     permissions:
-      contents: write
       id-token: write # OIDC para assumir AWS_ROLE_ARN
     env:
       AWS_REGION: sa-east-1
@@ -226,9 +216,8 @@ jobs:
         run: |
           set -euo pipefail
           # `set -u` pega variável ausente, não variável vazia, e token vazio é
-          # o modo de falha que interessa aqui: o push sairia com a credencial
-          # que o checkout deixou no `extraheader` e o erro falaria de outra
-          # identidade, que foi o que custou a diagnosticar da primeira vez.
+          # o modo de falha que interessa aqui: sem token o push falha por
+          # autenticação, e a mensagem não diz que o problema foi o segredo.
           if [ -z "${GH_TOKEN:-}" ]; then
             echo "::error::Token do release-bot veio vazio; conferir RELEASE_APP_ID e RELEASE_APP_PRIVATE_KEY."
             exit 1
@@ -240,6 +229,10 @@ jobs:
           git checkout -b "$BRANCH"
           git add site/public/anomalies
           git commit -m "chore(site): regenera atipicidades (${VERSION})"
+          # Isto grava o token no `.git/config` do workspace. Em runner
+          # hospedado o disco morre com o job, então tudo bem. Se este workflow
+          # for para um runner self-hosted, passe a URL direto no `git push` em
+          # vez de mexer no remoto: lá o arquivo sobrevive entre execuções.
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git push -u origin "$BRANCH"
           gh pr create --base main --head "$BRANCH" \
