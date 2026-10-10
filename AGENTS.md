@@ -99,3 +99,11 @@ lives in `package.json` under `"worktree"`. For quick reference:
 | pnpm filter   | `@datasus-viz/site`                    |
 
 O site está em `main` e é servido normalmente via `pnpm -F @datasus-viz/site dev`.
+
+## Shared tooling maintenance
+
+Local configuration and workflow entrypoints belong to this repository.
+Use versioned package/workflow update PRs for shared changes. `precisa sync`
+is retired; use `precisa scaffold --only <path>` only to add missing files.
+Historical template-divergence notes above describe local requirements;
+`ignoreTemplates` is no longer needed to protect these files.
