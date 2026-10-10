@@ -15,6 +15,5 @@
     "conduct": "conduct@precisa-saude.com.br"
   },
   "nodeVersion": "22",
-  "pnpmVersion": "9.15.9",
-  "ignoreTemplates": [".prettierignore"]
+  "pnpmVersion": "9.15.9"
 }
