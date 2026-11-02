@@ -65,6 +65,14 @@ pnpm -F @datasus-viz/site dev
 Veja [`site/docs/`](site/docs/) para arquitetura,
 pipeline de dados e deployment.
 
+Em **Tendências**, o painel [Observado vs. referência sazonal](site/docs/seasonal-comparison.md)
+compara a produção mensal aprovada com o mesmo mês nos cinco anos anteriores,
+com pelo menos três anos registrados. Inclui amplitude histórica e lacunas;
+não representa previsão validada nem detecção de surtos.
+O painel sazonal oferece todas as UFs, independentemente do overlay superior,
+e alterna entre volume e desvio percentual em relação à mediana histórica.
+Os controles ficam fora do gráfico e a tabela mensal tem seu próprio card.
+
 ---
 
 ## Uso rápido da CLI

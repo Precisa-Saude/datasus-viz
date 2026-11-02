@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { SeasonalComparison } from '@/components/SeasonalComparison';
 import { ComboboxSlots } from '@/components/TendenciasSlots';
 import type { TrendSeries } from '@/components/TrendChart';
 import { TrendChart } from '@/components/TrendChart';
@@ -205,43 +206,36 @@ export default function Tendencias() {
 
   // Carrega dados conforme o modo. Cada modo dispara uma única query.
   useEffect(() => {
-    if (mode === 'exames') {
-      if (loincs.length === 0) {
-        setData([]);
-        return;
-      }
-      setLoading(true);
-      setData(null);
-      fetchTrend(loincs, ufSigla === NATIONAL ? null : ufSigla).then(
-        (rows) => {
-          setData(rows);
-          setLoading(false);
-        },
-        (e: unknown) => {
-          setError(e instanceof Error ? e.message : String(e));
-          setLoading(false);
-        },
-      );
-      return;
-    }
-    // mode === 'ufs'
-    if (!singleLoinc || ufList.length === 0) {
+    if (!manifest) return;
+    if (mode === 'exames' ? loincs.length === 0 : !singleLoinc) {
       setData([]);
+      setLoading(false);
       return;
     }
+    let active = true;
     setLoading(true);
     setData(null);
-    fetchTrendByUf(singleLoinc, ufList).then(
+    setError(null);
+    const request =
+      mode === 'exames'
+        ? fetchTrend(loincs, ufSigla === NATIONAL ? null : ufSigla)
+        : fetchTrendByUf(singleLoinc!, manifest.availableUFs);
+    request.then(
       (rows) => {
+        if (!active) return;
         setData(rows);
         setLoading(false);
       },
       (e: unknown) => {
+        if (!active) return;
         setError(e instanceof Error ? e.message : String(e));
         setLoading(false);
       },
     );
-  }, [mode, loincs, ufSigla, singleLoinc, ufList]);
+    return () => {
+      active = false;
+    };
+  }, [mode, loincs, ufSigla, singleLoinc, manifest]);
 
   const biomarkersByLoinc = useMemo<Record<string, string>>(
     () =>
@@ -285,6 +279,23 @@ export default function Tendencias() {
       label: uf,
     }));
   }, [mode, loincs, ufList, biomarkersByLoinc]);
+
+  // O overlay mantém até três UFs; o painel sazonal pode explorar todas.
+  const trendData = useMemo(
+    () => (mode === 'ufs' ? data?.filter((row) => ufList.includes(row.seriesId)) : data),
+    [data, mode, ufList],
+  );
+  const seasonalSeries = useMemo<TrendSeries[]>(
+    () =>
+      mode === 'ufs'
+        ? [...new Set([...ufList, ...(manifest?.availableUFs ?? [])])].map((uf) => ({
+            color: series.find((item) => item.id === uf)?.color ?? SERIES_COLORS[0]!,
+            id: uf,
+            label: uf,
+          }))
+        : series,
+    [manifest, mode, series, ufList],
+  );
 
   const loincHandlers = makeSlotHandlers(
     setLoincs,
@@ -426,9 +437,18 @@ export default function Tendencias() {
               Carregando série…
             </div>
           ) : (
-            <TrendChart data={data} series={series} />
+            <TrendChart data={trendData ?? []} series={series} />
           )}
         </section>
+      ) : null}
+
+      {manifest && !loading && data && error === null ? (
+        <SeasonalComparison
+          data={data}
+          manifest={manifest}
+          scope={escopoLabel}
+          series={seasonalSeries}
+        />
       ) : null}
 
       {error !== null ? (
