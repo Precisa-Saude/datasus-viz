@@ -1,3 +1,14 @@
+## [1.17.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.4...v1.17.0) (2026-11-02)
+
+### Features
+
+* **site:** adicionar comparação sazonal histórica ([#89](https://github.com/Precisa-Saude/datasus-viz/issues/89)) ([3df4d76](https://github.com/Precisa-Saude/datasus-viz/commit/3df4d761d4186d5a0782e815b6cf79b413bc3ea1))
+
+### CI/CD
+
+* adotar tooling v3 versionado com política de revisão ([#84](https://github.com/Precisa-Saude/datasus-viz/issues/84)) ([29be0d3](https://github.com/Precisa-Saude/datasus-viz/commit/29be0d319bb45ec062c88c6652bc8e933248aec5))
+* definir política explícita para revisão externa ([#85](https://github.com/Precisa-Saude/datasus-viz/issues/85)) ([e4192af](https://github.com/Precisa-Saude/datasus-viz/commit/e4192af0496134690027d0bff3c43e4f3bbf4e9b))
+
 ## [1.16.4](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.3...v1.16.4) (2026-10-06)
 
 ### Bug Fixes
