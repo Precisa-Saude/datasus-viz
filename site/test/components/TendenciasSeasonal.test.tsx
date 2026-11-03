@@ -27,7 +27,10 @@ vi.mock('@/components/TrendChart', () => ({
     <div data-testid="overlay-data">{JSON.stringify({ data, series })}</div>
   ),
 }));
-vi.mock('@/components/TendenciasSlots', () => ({ ComboboxSlots: () => null }));
+vi.mock('@/components/TendenciasSlots', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/components/TendenciasSlots')>()),
+  ComboboxSlots: () => null,
+}));
 vi.mock('@/components/ui/combobox', () => ({
   Combobox: ({
     ariaLabel,
@@ -200,6 +203,43 @@ describe('Tendências com referência sazonal', () => {
     fireEvent.change(selector, { target: { value: 'AC' } });
     expect(january().getByText('100')).toBeInTheDocument();
     expect(fetchTrendByUf).toHaveBeenCalledTimes(1);
+  });
+
+  it('oferece todos os exames no painel sazonal sem ampliar o overlay nem refazer consulta', async () => {
+    const biomarkers = ['a', 'b', 'c', 'd'].map((loinc) => ({
+      code: loinc,
+      display: `Exame ${loinc.toUpperCase()}`,
+      loinc,
+    }));
+    const manifest = {
+      availableUFs: ['SP', 'RJ'],
+      biomarkers,
+      competencias: ['2025-01'],
+      geradoEm: '2025-02-01T00:00:00Z',
+      years: [2025],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => manifest }));
+    vi.mocked(fetchTopLoincsByVolume).mockResolvedValue(['a', 'b', 'c']);
+    vi.mocked(fetchTrend).mockResolvedValue(
+      ['a', 'b', 'c', 'd'].flatMap((loinc, index) => rows(loinc, 100 + index)),
+    );
+    renderPage();
+    await screen.findByRole('table', { name: /Comparação mensal/ });
+    expect(fetchTrend).toHaveBeenCalledWith(['a', 'b', 'c', 'd'], null);
+    const selector = screen.getByRole('combobox', { name: 'Série sazonal' });
+    expect(
+      within(selector)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Exame A', 'Exame B', 'Exame C', 'Exame D']);
+    fireEvent.change(selector, { target: { value: 'd' } });
+    expect(january().getByText('103')).toBeInTheDocument();
+    const overlay = JSON.parse(screen.getByTestId('overlay-data').textContent!);
+    expect(overlay.series.map((item: { id: string }) => item.id)).toEqual(['a', 'b', 'c']);
+    expect(
+      overlay.data.every((point: TrendPoint) => ['a', 'b', 'c'].includes(point.seriesId)),
+    ).toBe(true);
+    expect(fetchTrend).toHaveBeenCalledTimes(1);
   });
 
   it('reutiliza dados e filtros nos modos de exame e UF', async () => {

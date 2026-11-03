@@ -1,7 +1,40 @@
 import { X } from 'lucide-react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import type { ComboboxItem } from '@/components/ui/combobox';
 import { Combobox } from '@/components/ui/combobox';
+
+export interface SlotHandlers {
+  add: () => void;
+  change: (idx: number, value: string) => void;
+  remove: (idx: number) => void;
+}
+
+/**
+ * Geradora de handlers `change/add/remove` para um array de slots (até
+ * `max`). Mantém os updates imutáveis e usa um callback de candidato
+ * para escolher o próximo valor a ser adicionado.
+ */
+export function makeSlotHandlers(
+  setter: Dispatch<SetStateAction<string[]>>,
+  pickNext: () => string | undefined,
+  max: number,
+): SlotHandlers {
+  return {
+    add: () => {
+      const candidate = pickNext();
+      if (!candidate) return;
+      setter((prev) => (prev.length >= max ? prev : [...prev, candidate]));
+    },
+    change: (idx, value) =>
+      setter((prev) => {
+        const next = [...prev];
+        next[idx] = value;
+        return next;
+      }),
+    remove: (idx) => setter((prev) => prev.filter((_, i) => i !== idx)),
+  };
+}
 
 interface SlotRemoveButtonProps {
   ariaLabel: string;

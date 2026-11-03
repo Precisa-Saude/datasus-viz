@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { SeasonalMonth } from '@/lib/seasonal';
-import { seasonalChartRows, symmetricPercentDomain } from '@/lib/seasonal-presentation';
+import {
+  seasonalChartRows,
+  seasonalSeriesOptions,
+  symmetricPercentDomain,
+} from '@/lib/seasonal-presentation';
 
 const row: SeasonalMonth = {
   competencia: '2024-01',
@@ -46,5 +50,40 @@ describe('dados da apresentação sazonal', () => {
     expect(symmetricPercentDomain([0, 0])).toEqual([-1, 1]);
     expect(symmetricPercentDomain([Infinity, -Infinity])).toEqual([-1, 1]);
     expect(symmetricPercentDomain([NaN, NaN])).toEqual([-1, 1]);
+  });
+});
+
+describe('séries disponíveis no painel sazonal', () => {
+  const labels: Record<string, string> = {
+    '2160-0': 'Creatinina',
+    '2345-7': 'Glicose',
+    '718-7': 'Hemoglobina',
+  };
+  const options = seasonalSeriesOptions(
+    [
+      { color: '#f59e0b', id: '2345-7' },
+      { color: '#7c3aed', id: '2160-0' },
+    ],
+    ['2160-0', '2345-7', '718-7'],
+    (id) => labels[id] ?? id,
+    '#999',
+  );
+
+  it('lista os slots primeiro, com a cor deles, e depois todas as demais séries', () => {
+    expect(options.map((o) => o.id)).toEqual(['2345-7', '2160-0', '718-7']);
+    expect(options.map((o) => o.color)).toEqual(['#f59e0b', '#7c3aed', '#999']);
+  });
+
+  it('rotula cada série e não duplica ids presentes nos dois lados', () => {
+    expect(options.map((o) => o.label)).toEqual(['Glicose', 'Creatinina', 'Hemoglobina']);
+    expect(new Set(options.map((o) => o.id)).size).toBe(options.length);
+  });
+
+  it('sem slots, oferece todas as séries com a cor de fallback', () => {
+    const all = seasonalSeriesOptions([], ['SP', 'RJ'], (id) => id, '#999');
+    expect(all).toEqual([
+      { color: '#999', id: 'SP', label: 'SP' },
+      { color: '#999', id: 'RJ', label: 'RJ' },
+    ]);
   });
 });
