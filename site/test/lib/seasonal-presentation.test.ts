@@ -69,21 +69,27 @@ describe('séries disponíveis no painel sazonal', () => {
     '#999',
   );
 
-  it('lista os slots primeiro, com a cor deles, e depois todas as demais séries', () => {
-    expect(options.map((o) => o.id)).toEqual(['2345-7', '2160-0', '718-7']);
-    expect(options.map((o) => o.color)).toEqual(['#f59e0b', '#7c3aed', '#999']);
+  it('lista todas as séries em ordem alfabética, mantendo a cor dos slots', () => {
+    expect(options.map((o) => o.label)).toEqual(['Creatinina', 'Glicose', 'Hemoglobina']);
+    expect(options.map((o) => o.color)).toEqual(['#7c3aed', '#f59e0b', '#999']);
   });
 
-  it('rotula cada série e não duplica ids presentes nos dois lados', () => {
-    expect(options.map((o) => o.label)).toEqual(['Glicose', 'Creatinina', 'Hemoglobina']);
+  it('não duplica ids presentes nos dois lados e ordena com acentos à moda pt-BR', () => {
     expect(new Set(options.map((o) => o.id)).size).toBe(options.length);
+    const acentos = seasonalSeriesOptions(
+      [],
+      ['b', 'a'],
+      (id) => ({ a: 'Ácido Úrico', b: 'Albumina' })[id]!,
+      '#999',
+    );
+    expect(acentos.map((o) => o.label)).toEqual(['Ácido Úrico', 'Albumina']);
   });
 
   it('sem slots, oferece todas as séries com a cor de fallback', () => {
     const all = seasonalSeriesOptions([], ['SP', 'RJ'], (id) => id, '#999');
     expect(all).toEqual([
-      { color: '#999', id: 'SP', label: 'SP' },
       { color: '#999', id: 'RJ', label: 'RJ' },
+      { color: '#999', id: 'SP', label: 'SP' },
     ]);
   });
 });

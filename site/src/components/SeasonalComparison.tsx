@@ -33,16 +33,28 @@ function comparisonLabel(row: SeasonalMonth): string {
 
 interface SeasonalComparisonProps {
   data: TrendPoint[];
+  /** Série mostrada antes de o usuário escolher (ex.: o primeiro slot do overlay). */
+  defaultSeriesId?: string;
   manifest: AggregateIndex;
   scope: string;
+  /** Em ordem alfabética de rótulo; a seleção inicial vem de `defaultSeriesId`. */
   series: TrendSeries[];
 }
 
-export function SeasonalComparison({ data, manifest, scope, series }: SeasonalComparisonProps) {
+export function SeasonalComparison({
+  data,
+  defaultSeriesId,
+  manifest,
+  scope,
+  series,
+}: SeasonalComparisonProps) {
   const [selectedSeries, setSelectedSeries] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [view, setView] = useState<SeasonalView>('volume');
-  const activeSeries = series.find((item) => item.id === selectedSeries) ?? series[0];
+  const activeSeries =
+    series.find((item) => item.id === selectedSeries) ??
+    series.find((item) => item.id === defaultSeriesId) ??
+    series[0];
   const years = useMemo(
     () =>
       [

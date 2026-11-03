@@ -25,9 +25,10 @@ export interface SeasonalSeriesOption {
 }
 
 /**
- * Séries que o painel sazonal pode explorar: os slots do overlay primeiro
- * (com a cor deles), depois todas as demais do escopo — todos os exames
- * ou todas as UFs — com a cor de fallback. Sem duplicatas.
+ * Séries que o painel sazonal pode explorar: todas as do escopo — todos
+ * os exames ou todas as UFs — em ordem alfabética de rótulo. Os slots do
+ * overlay mantêm a cor deles; as demais usam a cor de fallback. Sem
+ * duplicatas.
  */
 export function seasonalSeriesOptions(
   slotSeries: readonly Pick<SeasonalSeriesOption, 'color' | 'id'>[],
@@ -36,11 +37,9 @@ export function seasonalSeriesOptions(
   fallbackColor: string,
 ): SeasonalSeriesOption[] {
   const slotColor = new Map(slotSeries.map((s) => [s.id, s.color]));
-  return [...new Set([...slotColor.keys(), ...allIds])].map((id) => ({
-    color: slotColor.get(id) ?? fallbackColor,
-    id,
-    label: labelOf(id),
-  }));
+  return [...new Set([...slotColor.keys(), ...allIds])]
+    .map((id) => ({ color: slotColor.get(id) ?? fallbackColor, id, label: labelOf(id) }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 }
 
 export function symmetricPercentDomain([minimum, maximum]: readonly [number, number]): [

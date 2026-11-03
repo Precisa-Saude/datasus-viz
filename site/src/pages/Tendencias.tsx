@@ -257,7 +257,7 @@ export default function Tendencias() {
 
   // O overlay mantém até três séries (os slots); o painel sazonal pode
   // explorar todas as que a query trouxe — todos os exames ou todas as
-  // UFs —, com os slots primeiro na lista.
+  // UFs —, em ordem alfabética.
   const trendData = useMemo(
     () => data?.filter((row) => (mode === 'ufs' ? ufList : loincs).includes(row.seriesId)),
     [data, mode, ufList, loincs],
@@ -294,7 +294,6 @@ export default function Tendencias() {
   }
 
   const slotsCount = mode === 'exames' ? loincs.length : ufList.length;
-  const slotsRemaining = MAX_SERIES - slotsCount;
   const slotsLabel = mode === 'exames' ? 'Exames comparados' : 'UFs comparadas';
   const addLabel = mode === 'exames' ? 'Adicionar exame' : 'Adicionar UF';
 
@@ -362,7 +361,7 @@ export default function Tendencias() {
           <span className={TYPE.label}>
             {slotsLabel} ({slotsCount}/{MAX_SERIES})
           </span>
-          {slotsRemaining > 0 ? (
+          {slotsCount < MAX_SERIES ? (
             <button
               className="text-primary hover:bg-primary/10 inline-flex items-center gap-1 rounded-md px-2 py-1 font-sans text-xs font-medium transition-colors"
               onClick={mode === 'exames' ? loincHandlers.add : ufHandlers.add}
@@ -424,6 +423,7 @@ export default function Tendencias() {
       {manifest && !loading && data && error === null ? (
         <SeasonalComparison
           data={data}
+          defaultSeriesId={series[0]?.id}
           manifest={manifest}
           scope={escopoLabel}
           series={seasonalSeries}
