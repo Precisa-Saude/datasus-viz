@@ -1,3 +1,13 @@
+## [1.17.1](https://github.com/Precisa-Saude/datasus-viz/compare/v1.17.0...v1.17.1) (2026-11-03)
+
+### Bug Fixes
+
+* **site:** painel sazonal oferece todos os exames, não só os três do overlay ([#93](https://github.com/Precisa-Saude/datasus-viz/issues/93)) ([73d83dc](https://github.com/Precisa-Saude/datasus-viz/commit/73d83dc5bd1875397b12550ca80cbec1ba266ef4))
+
+### Chores
+
+* **site:** regenera atipicidades (v20261103T151321) ([#92](https://github.com/Precisa-Saude/datasus-viz/issues/92)) ([f142a37](https://github.com/Precisa-Saude/datasus-viz/commit/f142a370cacbb1ff19d967cd1003c283c49e4560))
+
 ## [1.17.0](https://github.com/Precisa-Saude/datasus-viz/compare/v1.16.4...v1.17.0) (2026-11-02)
 
 ### Features
