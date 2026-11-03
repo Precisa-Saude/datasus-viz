@@ -18,6 +18,30 @@ export function seasonalChartRows(rows: SeasonalMonth[], view: SeasonalView) {
   });
 }
 
+export interface SeasonalSeriesOption {
+  color: string;
+  id: string;
+  label: string;
+}
+
+/**
+ * Séries que o painel sazonal pode explorar: todas as do escopo — todos
+ * os exames ou todas as UFs — em ordem alfabética de rótulo. Os slots do
+ * overlay mantêm a cor deles; as demais usam a cor de fallback. Sem
+ * duplicatas.
+ */
+export function seasonalSeriesOptions(
+  slotSeries: readonly Pick<SeasonalSeriesOption, 'color' | 'id'>[],
+  allIds: readonly string[],
+  labelOf: (id: string) => string,
+  fallbackColor: string,
+): SeasonalSeriesOption[] {
+  const slotColor = new Map(slotSeries.map((s) => [s.id, s.color]));
+  return [...new Set([...slotColor.keys(), ...allIds])]
+    .map((id) => ({ color: slotColor.get(id) ?? fallbackColor, id, label: labelOf(id) }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+}
+
 export function symmetricPercentDomain([minimum, maximum]: readonly [number, number]): [
   number,
   number,

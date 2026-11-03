@@ -1,10 +1,9 @@
 import { Plus } from 'lucide-react';
-import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { SeasonalComparison } from '@/components/SeasonalComparison';
-import { ComboboxSlots } from '@/components/TendenciasSlots';
+import { ComboboxSlots, makeSlotHandlers } from '@/components/TendenciasSlots';
 import type { TrendSeries } from '@/components/TrendChart';
 import { TrendChart } from '@/components/TrendChart';
 import type { ComboboxItem } from '@/components/ui/combobox';
@@ -20,6 +19,7 @@ import {
   fetchTrend,
   fetchTrendByUf,
 } from '@/lib/queries';
+import { seasonalSeriesOptions } from '@/lib/seasonal-presentation';
 import { TYPE } from '@/lib/typography';
 
 async function loadManifest(): Promise<AggregateIndex> {
@@ -70,37 +70,6 @@ interface SeedState {
   singleLoinc: null | string;
   ufList: string[];
   ufSigla: string;
-}
-
-interface SlotHandlers {
-  add: () => void;
-  change: (idx: number, value: string) => void;
-  remove: (idx: number) => void;
-}
-
-/**
- * Geradora de handlers `change/add/remove` para um array de slots
- * (até MAX_SERIES). Mantém os updates imutáveis e usa um callback de
- * candidato para escolher o próximo valor a ser adicionado.
- */
-function makeSlotHandlers(
-  setter: Dispatch<SetStateAction<string[]>>,
-  pickNext: () => string | undefined,
-): SlotHandlers {
-  return {
-    add: () => {
-      const candidate = pickNext();
-      if (!candidate) return;
-      setter((prev) => (prev.length >= MAX_SERIES ? prev : [...prev, candidate]));
-    },
-    change: (idx, value) =>
-      setter((prev) => {
-        const next = [...prev];
-        next[idx] = value;
-        return next;
-      }),
-    remove: (idx) => setter((prev) => prev.filter((_, i) => i !== idx)),
-  };
 }
 
 function computeSeedState(
@@ -204,10 +173,13 @@ export default function Tendencias() {
     setSearchParams(next, { replace: true });
   }, [manifest, mode, ufSigla, loincs, singleLoinc, ufList, setSearchParams]);
 
-  // Carrega dados conforme o modo. Cada modo dispara uma única query.
+  // Carrega dados conforme o modo. Cada modo dispara uma única query que
+  // traz todas as séries do escopo (todos os exames, ou todas as UFs):
+  // o overlay filtra para os slots e o painel sazonal pode explorar
+  // qualquer série sem nova consulta. Trocar um slot não refaz a query.
   useEffect(() => {
     if (!manifest) return;
-    if (mode === 'exames' ? loincs.length === 0 : !singleLoinc) {
+    if (mode === 'ufs' && !singleLoinc) {
       setData([]);
       setLoading(false);
       return;
@@ -218,7 +190,10 @@ export default function Tendencias() {
     setError(null);
     const request =
       mode === 'exames'
-        ? fetchTrend(loincs, ufSigla === NATIONAL ? null : ufSigla)
+        ? fetchTrend(
+            manifest.biomarkers.map((b) => b.loinc),
+            ufSigla === NATIONAL ? null : ufSigla,
+          )
         : fetchTrendByUf(singleLoinc!, manifest.availableUFs);
     request.then(
       (rows) => {
@@ -235,7 +210,7 @@ export default function Tendencias() {
     return () => {
       active = false;
     };
-  }, [mode, loincs, ufSigla, singleLoinc, manifest]);
+  }, [mode, ufSigla, singleLoinc, manifest]);
 
   const biomarkersByLoinc = useMemo<Record<string, string>>(
     () =>
@@ -280,29 +255,33 @@ export default function Tendencias() {
     }));
   }, [mode, loincs, ufList, biomarkersByLoinc]);
 
-  // O overlay mantém até três UFs; o painel sazonal pode explorar todas.
+  // O overlay mantém até três séries (os slots); o painel sazonal pode
+  // explorar todas as que a query trouxe — todos os exames ou todas as
+  // UFs —, em ordem alfabética.
   const trendData = useMemo(
-    () => (mode === 'ufs' ? data?.filter((row) => ufList.includes(row.seriesId)) : data),
-    [data, mode, ufList],
+    () => data?.filter((row) => (mode === 'ufs' ? ufList : loincs).includes(row.seriesId)),
+    [data, mode, ufList, loincs],
   );
   const seasonalSeries = useMemo<TrendSeries[]>(
     () =>
-      mode === 'ufs'
-        ? [...new Set([...ufList, ...(manifest?.availableUFs ?? [])])].map((uf) => ({
-            color: series.find((item) => item.id === uf)?.color ?? SERIES_COLORS[0]!,
-            id: uf,
-            label: uf,
-          }))
-        : series,
-    [manifest, mode, series, ufList],
+      seasonalSeriesOptions(
+        series,
+        mode === 'ufs' ? (manifest?.availableUFs ?? []) : Object.keys(biomarkersByLoinc),
+        (id) => biomarkersByLoinc[id] ?? id,
+        SERIES_COLORS[0]!,
+      ),
+    [biomarkersByLoinc, manifest, mode, series],
   );
 
   const loincHandlers = makeSlotHandlers(
     setLoincs,
     () => manifest?.biomarkers.find((b) => !loincs.includes(b.loinc))?.loinc,
+    MAX_SERIES,
   );
-  const ufHandlers = makeSlotHandlers(setUfList, () =>
-    manifest?.availableUFs.find((u) => !ufList.includes(u)),
+  const ufHandlers = makeSlotHandlers(
+    setUfList,
+    () => manifest?.availableUFs.find((u) => !ufList.includes(u)),
+    MAX_SERIES,
   );
 
   let escopoLabel: string;
@@ -315,7 +294,6 @@ export default function Tendencias() {
   }
 
   const slotsCount = mode === 'exames' ? loincs.length : ufList.length;
-  const slotsRemaining = MAX_SERIES - slotsCount;
   const slotsLabel = mode === 'exames' ? 'Exames comparados' : 'UFs comparadas';
   const addLabel = mode === 'exames' ? 'Adicionar exame' : 'Adicionar UF';
 
@@ -383,7 +361,7 @@ export default function Tendencias() {
           <span className={TYPE.label}>
             {slotsLabel} ({slotsCount}/{MAX_SERIES})
           </span>
-          {slotsRemaining > 0 ? (
+          {slotsCount < MAX_SERIES ? (
             <button
               className="text-primary hover:bg-primary/10 inline-flex items-center gap-1 rounded-md px-2 py-1 font-sans text-xs font-medium transition-colors"
               onClick={mode === 'exames' ? loincHandlers.add : ufHandlers.add}
@@ -445,6 +423,7 @@ export default function Tendencias() {
       {manifest && !loading && data && error === null ? (
         <SeasonalComparison
           data={data}
+          defaultSeriesId={series[0]?.id}
           manifest={manifest}
           scope={escopoLabel}
           series={seasonalSeries}

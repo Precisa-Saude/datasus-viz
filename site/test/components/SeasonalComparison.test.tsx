@@ -183,4 +183,38 @@ describe('SeasonalComparison', () => {
     rerender(panel([point('invalid', 2)]));
     expect(screen.getByText('Sem dados para a comparação sazonal.')).toBeInTheDocument();
   });
+
+  it('começa na série padrão informada, não na primeira da lista alfabética', () => {
+    render(
+      <MemoryRouter>
+        <SeasonalComparison
+          data={data}
+          defaultSeriesId="b"
+          manifest={manifest}
+          scope="SP"
+          series={series}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('combobox', { name: 'Série sazonal' })).toHaveValue('b');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Série sazonal' }), {
+      target: { value: 'a' },
+    });
+    expect(screen.getByRole('combobox', { name: 'Série sazonal' })).toHaveValue('a');
+  });
+
+  it('cai na primeira série quando a padrão não existe na lista', () => {
+    render(
+      <MemoryRouter>
+        <SeasonalComparison
+          data={data}
+          defaultSeriesId="zz"
+          manifest={manifest}
+          scope="SP"
+          series={series}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('combobox', { name: 'Série sazonal' })).toHaveValue('a');
+  });
 });

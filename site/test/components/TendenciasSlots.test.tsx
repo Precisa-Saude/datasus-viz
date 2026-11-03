@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComboboxSlots } from '@/components/TendenciasSlots';
+import { ComboboxSlots, makeSlotHandlers } from '@/components/TendenciasSlots';
 
 const ITEMS = [
   { label: 'SP', value: 'SP' },
@@ -77,5 +77,42 @@ describe('ComboboxSlots', () => {
     const bullets = container.querySelectorAll('span[aria-hidden="true"].rounded-full');
     expect(bullets[0]).toHaveStyle({ background: 'rgb(255, 0, 0)' });
     expect(bullets[1]).toHaveStyle({ background: 'rgb(0, 255, 0)' });
+  });
+});
+
+describe('makeSlotHandlers', () => {
+  /** Aplica os updaters de estado a um array inicial, como o React faria. */
+  function harness(initial: string[], pickNext: () => string | undefined, max = 3) {
+    let state = initial;
+    const setter = (update: string[] | ((prev: string[]) => string[])) => {
+      state = typeof update === 'function' ? update(state) : update;
+    };
+    return {
+      handlers: makeSlotHandlers(setter, pickNext, max),
+      get state() {
+        return state;
+      },
+    };
+  }
+
+  it('adiciona o candidato até o máximo e ignora quando não há candidato', () => {
+    const h = harness(['SP', 'RJ'], () => 'MG');
+    h.handlers.add();
+    expect(h.state).toEqual(['SP', 'RJ', 'MG']);
+    h.handlers.add();
+    expect(h.state).toEqual(['SP', 'RJ', 'MG']);
+    const empty = harness(['SP'], () => undefined);
+    empty.handlers.add();
+    expect(empty.state).toEqual(['SP']);
+  });
+
+  it('troca e remove por índice sem mutar o array anterior', () => {
+    const initial = ['SP', 'RJ'];
+    const h = harness(initial, () => undefined);
+    h.handlers.change(1, 'MG');
+    expect(h.state).toEqual(['SP', 'MG']);
+    h.handlers.remove(0);
+    expect(h.state).toEqual(['MG']);
+    expect(initial).toEqual(['SP', 'RJ']);
   });
 });
