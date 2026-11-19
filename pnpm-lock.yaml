@@ -27,8 +27,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0(typescript@5.7.3)
       '@precisa-saude/worktree-cli':
-        specifier: ^1.14.3
-        version: 1.14.3
+        specifier: ^3.5.2
+        version: 3.5.2
       '@semantic-release/changelog':
         specifier: ^6.0.3
         version: 6.0.3(semantic-release@25.0.3(typescript@5.7.3))
@@ -1543,8 +1543,8 @@ packages:
       shiki:
         optional: true
 
-  '@precisa-saude/worktree-cli@1.14.3':
-    resolution: {integrity: sha512-5dyvugbKZEYpPRt2uwk73soIJZjptErnhcJVC0v2QnRAJh6MgZ/AmMPJWU21Jq59AdQDdkXKaFYF8tkZScW47w==}
+  '@precisa-saude/worktree-cli@3.5.2':
+    resolution: {integrity: sha512-PuIdWJHbPkLdvXIZ0SbLQA2eljvKxHW/U8wyYLfqX5v/E7RGOJIr8XO3dnojHR4rS6OWEMCxUPqqKxZ7hid/Xw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -7889,7 +7889,7 @@ snapshots:
       lucide-react: 0.562.0(react@19.2.5)
       recharts: 3.8.1(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react-is@17.0.2)(react@19.2.5)(redux@5.0.1)
 
-  '@precisa-saude/worktree-cli@1.14.3':
+  '@precisa-saude/worktree-cli@3.5.2':
     dependencies:
       chalk: 5.6.2
       commander: 12.1.0
